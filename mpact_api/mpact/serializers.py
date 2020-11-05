@@ -6,7 +6,6 @@ from .models import ChatData, UserChat, UserData
 class UserDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserData
-        #   fields = ['user_id','is_bot','first_name','last_name', 'language_code']
         exclude = ["joined_date"]
 
 

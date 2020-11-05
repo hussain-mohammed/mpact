@@ -1,8 +1,8 @@
 # mpact
+
 A Telegram-based expert support system
 
-
-### Set Environment Variables
+## Set Environment Variables
 
 1. SECRET_KEY (Django Secret Key)
 2. TOKEN    (Telegram Bot Token)
