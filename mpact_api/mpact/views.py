@@ -1,8 +1,7 @@
-from . import constants
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .constants import Constants
+from . import constants
 from .logger import logger
 from .models import ChatData, UserChat, UserData
 from .serializers import UserDataSerializer
@@ -28,17 +27,17 @@ class ListenMessages(APIView):
     """
 
     def post(self, request):
-        message = request.data.get(Constants.MESSAGE)
+        message = request.data.get(constants.MESSAGE)
         logger.debug(message)
-        chat_data = message.get(Constants.CHAT)
-        from_data = message.get(Constants.FROM)
+        chat_data = message.get(constants.CHAT)
+        from_data = message.get(constants.FROM)
 
-        if Constants.NEW_CHAT_PARTICIPANT in message:
+        if constants.NEW_CHAT_PARTICIPANT in message:
             # This is used whenever bot or some other members are added to the group
-            user_data = message.get(Constants.NEW_CHAT_PARTICIPANT)
-            username = user_data.get(Constants.USERNAME)
+            user_data = message.get(constants.NEW_CHAT_PARTICIPANT)
+            username = user_data.get(constants.USERNAME)
 
-            if username == Constants.BOT_USERNAME:
+            if username == constants.BOT_USERNAME:
                 # when our bot is added to the group. Bot will be saved to the Chat Data Model
                 return Response(save_chatdata(chat_data))
             else:
@@ -48,19 +47,19 @@ class ListenMessages(APIView):
                     # Mapping between user and group is saved in UserChat Model
                     return Response(save_userchat(chat_data, user_data_inst))
 
-        elif Constants.NEW_CHAT_TITLE in message:
+        elif constants.NEW_CHAT_TITLE in message:
             # This is used whenever group title is changed.
-            chat_instance = ChatData.objects.get(pk=chat_data.get(Constants.ID))
+            chat_instance = ChatData.objects.get(pk=chat_data.get(constants.ID))
             return Response(save_chatdata(chat_data, chat_instance))
 
-        elif Constants.TEXT in message:
+        elif constants.TEXT in message:
             # This is used whenever someone messages in the group.
             # It is used to store the existing user's details to UserData and UserChat Models
             try:
-                user_instance = UserData.objects.get(pk=from_data.get(Constants.ID))
+                user_instance = UserData.objects.get(pk=from_data.get(constants.ID))
                 user_chat_instance = UserChat.objects.get(
-                    chat_id=chat_data.get(Constants.ID),
-                    user_id__id=from_data.get(Constants.ID),
+                    chat_id=chat_data.get(constants.ID),
+                    user_id__id=from_data.get(constants.ID),
                 )
             except (UserData.DoesNotExist, UserChat.DoesNotExist):
                 logger.debug(
@@ -76,7 +75,7 @@ class ListenMessages(APIView):
                     user_data_rec.save()
                     logger.debug(constants.DATA_SAVED, constants.USER)
                     return Response(save_userchat(chat_data, user_data_rec))
-                elif user_serializer.errors.get(Constants.ID):
+                elif user_serializer.errors.get(constants.ID):
                     # User already exists in user data model but does not exist in userchat model
                     return Response(save_userchat(chat_data, user_instance))
 
@@ -91,7 +90,7 @@ class ListenMessages(APIView):
             if user_serializer.is_valid():
                 user_serializer.save()
                 logger.debug(constants.DATA_SAVED, constants.USER)
-                return Response(Constants.OK)
+                return Response(constants.OK)
 
         logger.debug(constants.WEBHOOK_END)
-        return Response(Constants.OK)
+        return Response(constants.OK)
