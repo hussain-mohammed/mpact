@@ -1,7 +1,9 @@
+from . import constants
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .constants import Constants
+from .logger import logger
 from .models import ChatData, UserChat, UserData
 from .serializers import UserDataSerializer
 from .services import save_chatdata, save_userchat, save_userdata, set_webhook
@@ -26,8 +28,8 @@ class ListenMessages(APIView):
     """
 
     def post(self, request):
-        print(Constants.MESSAGE)
         message = request.data.get(Constants.MESSAGE)
+        logger.debug(message)
         chat_data = message.get(Constants.CHAT)
         from_data = message.get(Constants.FROM)
 
@@ -61,19 +63,35 @@ class ListenMessages(APIView):
                     user_id__id=from_data.get(Constants.ID),
                 )
             except (UserData.DoesNotExist, UserChat.DoesNotExist):
+                logger.debug(
+                    constants.CREATE_UPDATE_MSG,
+                    constants.CREATING,
+                    constants.USER,
+                    from_data,
+                )
                 user_serializer = UserDataSerializer(data=from_data)
                 if user_serializer.is_valid():
                     # Storing user details in both UserData and UserChat Model
                     user_data_rec = UserData.objects.create(**from_data)
                     user_data_rec.save()
+                    logger.debug(constants.DATA_SAVED, constants.USER)
                     return Response(save_userchat(chat_data, user_data_rec))
                 elif user_serializer.errors.get(Constants.ID):
                     # User already exists in user data model but does not exist in userchat model
                     return Response(save_userchat(chat_data, user_instance))
 
             # If user already exists in both the Models then just updating the details(firstname, lastname) in User Data Model
+            logger.debug(
+                constants.CREATE_UPDATE_MSG,
+                constants.UPADTING,
+                constants.USER,
+                from_data,
+            )
             user_serializer = UserDataSerializer(user_instance, data=from_data)
             if user_serializer.is_valid():
                 user_serializer.save()
+                logger.debug(constants.DATA_SAVED, constants.USER)
                 return Response(Constants.OK)
+
+        logger.debug(constants.WEBHOOK_END)
         return Response(Constants.OK)
