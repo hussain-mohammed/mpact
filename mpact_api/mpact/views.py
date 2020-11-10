@@ -28,29 +28,60 @@ class ListenMessages(APIView):
 
     def post(self, request):
         """
-        request.data {
-           "update_id": 30927953,
-           "message":
-             {
-               "message_id": 51,
-               "from": {"id": 1229986355, "is_bot": False, "first_name": "John", "last_name": "Walter", "language_code": "en"},
-               "chat": {"id": -433354696, "title": "Testing Group", "type": "group", "all_members_are_administrators": True},
-               "date": 1604317469,
-               [
-                   'text': 'Hello, How are you?'
-               ] or
-               [
-                    "new_chat_participant": {"id": 1321604047, "is_bot": True, "first_name": "demo_bot", "username": "test_bot"},
-                    "new_chat_member": {"id": 1321604047, "is_bot": True, "first_name": "demo_bot", "username": "test_bot"},
-                    "new_chat_members": [{"id": 1321604047, "is_bot": True, "first_name": "demo_bot", "username": "test_bot"}]
-               ] or
-               [
-                    'left_chat_member': {'id': 879250491, 'is_bot': False, 'first_name': 'John', 'last_name': 'Walter'}
-               ]
-             }
-         }
+        Sample ``request.data``::
+        {
+            "update_id": 30927953,
+            "message": {
+                "message_id": 51,
+                "from": {
+                    "id": 1229986355,
+                    "is_bot": False,
+                    "first_name": "John",
+                    "last_name": "Walter",
+                    "language_code": "en"
+                },
+                "chat": {
+                    "id": -433354696,
+                    "title": "Testing Group",
+                    "type": "group",
+                    "all_members_are_administrators": True
+                },
+                "date": 1604317469,
 
-        Above square brackets will be based on the event such as text message, new chat member or a member left the group.
+                /** Someone sends a message in a group: */
+                "text": "Hello, How are you?"
+
+                /** Someone joins a chat: */
+                "new_chat_participant": {
+                    "id": 1321604047,
+                    "is_bot": True,
+                    "first_name": "demo_bot",
+                    "username": "test_bot"
+                },
+                "new_chat_member": {
+                    "id": 1321604047,
+                    "is_bot": True,
+                    "first_name": "demo_bot",
+                    "username": "test_bot"
+                },
+                "new_chat_members": [
+                    {
+                            "id": 1321604047,
+                            "is_bot": True,
+                            "first_name": "demo_bot",
+                            "username": "test_bot"
+                    }
+                ]
+
+                /** Someone leaves a chat: */
+                "left_chat_member": {
+                    "id": 879250491,
+                    "is_bot": False,
+                    "first_name": "John",
+                    "last_name": "Walter"
+                }
+            }
+        }
         """
         message = request.data.get(constants.MESSAGE)
         logger.debug(message)
