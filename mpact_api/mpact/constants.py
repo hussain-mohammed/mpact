@@ -26,3 +26,10 @@ DATA_SAVED = "%s data saved"
 # Environment Variables
 BOT_TOKEN = os.environ["TOKEN"]
 BOT_USERNAME = os.environ["BOT_USERNAME"]
+
+# Telegram Events
+TELEGRAM_EVENTS = {
+    "new_chat_participant",
+    "new_chat_title",
+    "text",
+}
