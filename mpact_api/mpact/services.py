@@ -1,7 +1,6 @@
 from telegram.ext import Updater
 
 from . import constants
-from .logger import logger
 from .models import UserChat, UserData
 from .serializers import ChatDataSerializer, UserDataSerializer
 
@@ -18,39 +17,22 @@ def set_webhook():
 
 
 def save_chatdata(chat_data, chat_instance=None):
-
     if chat_instance:
         # To update already existing record
-        logger.debug(
-            constants.CREATE_UPDATE_MSG, constants.UPADTING, constants.CHAT, chat_data
-        )
         chat_serializer = ChatDataSerializer(chat_instance, data=chat_data)
     else:
         # To create a new record
-        logger.debug(
-            constants.CREATE_UPDATE_MSG, constants.CREATING, constants.CHAT, chat_data
-        )
         chat_serializer = ChatDataSerializer(data=chat_data)
-    if chat_serializer.is_valid():
+    if chat_serializer.is_valid(raise_exception=True):
         chat_serializer.save()
-        logger.debug(constants.DATA_SAVED, constants.CHAT)
-        return True
-    logger.debug(constants.INVALID_MSG, constants.CHAT)
-    return False
 
 
 def save_userdata(userdata):
-    logger.debug(
-        constants.CREATE_UPDATE_MSG, constants.CREATING, constants.USER, userdata
-    )
     user_serializer = UserDataSerializer(data=userdata)
-    if user_serializer.is_valid():
+    if user_serializer.is_valid(raise_exception=True):
         user_data_rec = UserData.objects.create(**userdata)
         user_data_rec.save()
-        logger.debug(constants.DATA_SAVED, constants.USER)
         return user_data_rec
-    logger.debug(constants.INVALID_MSG, constants.USER)
-    return False
 
 
 def save_userchat(chat_data, user_data_inst):
@@ -58,5 +40,3 @@ def save_userchat(chat_data, user_data_inst):
         chat_id=chat_data.get(constants.ID), user_id=user_data_inst
     )
     user_chat_record.save()
-    logger.debug(constants.DATA_SAVED, constants.USER_CHAT)
-    return True
