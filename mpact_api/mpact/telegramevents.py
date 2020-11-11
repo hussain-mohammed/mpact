@@ -19,7 +19,8 @@ class TelegramEvents:
             # when our bot is added to the group. Bot will be saved to the Chat Data Model
             save_chatdata(self.chat_data)
         else:
-            # when other member is added to the group. Member will be saved to the User Data Model and UserChat table for mapping.
+            # when other member is added to the group. Member will be saved to the
+            # User Data Model and UserChat table for mapping.
             user_data_inst = save_userdata(user_data)
             if user_data_inst:
                 # Mapping between user and group is saved in UserChat Model
@@ -51,7 +52,8 @@ class TelegramEvents:
                 save_userchat(self.chat_data, user_instance)
             return True
 
-        # If user already exists in both the Models then just updating the details(firstname, lastname) in User Data Model
+        # If user already exists in both the Models then just updating the
+        # details(firstname, lastname) in User Data Model
         user_serializer = UserDataSerializer(user_instance, data=self.from_data)
         if user_serializer.is_valid(raise_exception=True):
             user_serializer.save()
