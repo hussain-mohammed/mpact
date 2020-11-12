@@ -1,18 +1,16 @@
 from telegram.ext import Updater
 
-from . import constants
+from .constants import BOT_TOKEN, ID, MESSAGE, REPLACE, WEBHOOK_URL
 from .models import UserChat, UserData
 from .serializers import ChatDataSerializer, UserDataSerializer
 
-updater = Updater(constants.BOT_TOKEN, use_context=True)
+updater = Updater(BOT_TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 
 
 def set_webhook():
     # TODO: we can move this to config file or keep this as a seperate script.
-    webhook = updater.bot.setWebhook(
-        constants.WEBHOOK_URL, allowed_updates=[constants.MESSAGE]
-    )
+    webhook = updater.bot.setWebhook(WEBHOOK_URL, allowed_updates=[MESSAGE])
     return webhook  # returns True or False
 
 
@@ -37,7 +35,7 @@ def save_userdata(userdata):
 
 def save_userchat(chat_data, user_data_inst):
     user_chat_record = UserChat.objects.create(
-        chat_id=chat_data.get(constants.ID), user_id=user_data_inst
+        chat_id=chat_data[ID], user=user_data_inst
     )
     user_chat_record.save()
 
@@ -52,6 +50,6 @@ def anonymize(dict_: dict) -> None:
         elif isinstance(value, list) and all(isinstance(v, dict) for v in value):
             for v in value:
                 anonymize(v)
-        elif key in constants.REPLACE:
-            dict_[key] = constants.REPLACE[key]
+        elif key in REPLACE:
+            dict_[key] = REPLACE[key]
     return dict_

@@ -2,9 +2,9 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import constants
+from .constants import MESSAGE, NEW_CHAT_PARTICIPANT, NEW_CHAT_TITLE, OK, TEXT
 from .logger import logger
-from .services import set_webhook, anonymize
+from .services import anonymize, set_webhook
 from .telegramevents import TelegramEvents
 
 
@@ -84,14 +84,14 @@ class ListenMessages(APIView):
         }
         """
         try:
-            message = request.data.get(constants.MESSAGE)
+            message = request.data[MESSAGE]
             event = TelegramEvents(message)
 
-            if constants.NEW_CHAT_PARTICIPANT in message:
+            if NEW_CHAT_PARTICIPANT in message:
                 event.new_chat_participant()
-            elif constants.NEW_CHAT_TITLE in message:
+            elif NEW_CHAT_TITLE in message:
                 event.new_chat_title()
-            elif constants.TEXT in message:
+            elif TEXT in message:
                 event.text()
             else:
                 raise ValueError(
@@ -101,4 +101,4 @@ class ListenMessages(APIView):
         except Exception as exeception:
             logger.exception(exeception)
 
-        return Response(constants.OK)
+        return Response(OK)

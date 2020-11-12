@@ -12,8 +12,6 @@ USER_CHAT = "User chat"
 UPADTING = "Updating"
 CREATING = "Creating"
 WEBHOOK_URL = "https://f784fbaa700a.ngrok.io/listen_msg"
-WEBHOOK_END = "Webhook call end"
-
 
 # Response Messages
 CREATE_UPDATE_MSG = "%s the %s data record: %s"
@@ -28,7 +26,6 @@ BOT_USERNAME = os.environ["BOT_USERNAME"]
 TEXT = "text"
 NEW_CHAT_PARTICIPANT = "new_chat_participant"
 NEW_CHAT_TITLE = "new_chat_title"
-
 
 ANON = "*" * 16
 REPLACE = {

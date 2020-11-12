@@ -31,7 +31,7 @@ class ChatData(models.Model):
 
 class UserChat(models.Model):
     chat_id = models.CharField(max_length=50)
-    user_id = models.ForeignKey(UserData, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserData, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"chat_id: {self.chat_id} {self.user_id.first_name}"
+        return f"chat_id: {self.chat_id}, user: {self.user}"

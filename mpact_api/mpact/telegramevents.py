@@ -1,4 +1,4 @@
-from . import constants
+from .constants import BOT_USERNAME, CHAT, FROM, ID, NEW_CHAT_PARTICIPANT, USERNAME
 from .models import ChatData, UserChat, UserData
 from .serializers import UserDataSerializer
 from .services import save_chatdata, save_userchat, save_userdata
@@ -7,15 +7,15 @@ from .services import save_chatdata, save_userchat, save_userdata
 class TelegramEvents:
     def __init__(self, message):
         self.message = message
-        self.chat_data = self.message.get(constants.CHAT)
-        self.from_data = self.message.get(constants.FROM)
+        self.chat_data = self.message[CHAT]
+        self.from_data = self.message[FROM]
 
     def new_chat_participant(self):
         # This is used whenever bot or some other members are added to the group
-        user_data = self.message.get(constants.NEW_CHAT_PARTICIPANT)
-        username = user_data.get(constants.USERNAME)
+        user_data = self.message[NEW_CHAT_PARTICIPANT]
+        username = user_data[USERNAME]
 
-        if username == constants.BOT_USERNAME:
+        if username == BOT_USERNAME:
             # when our bot is added to the group. Bot will be saved to the Chat Data Model
             save_chatdata(self.chat_data)
         else:
@@ -28,17 +28,17 @@ class TelegramEvents:
 
     def new_chat_title(self):
         # This is used whenever group title is changed.
-        chat_instance = ChatData.objects.get(pk=self.chat_data.get(constants.ID))
+        chat_instance = ChatData.objects.get(pk=self.chat_data[ID])
         save_chatdata(self.chat_data, chat_instance)
 
     def text(self):
         # This is used whenever someone messages in the group.
         # It is used to store the existing user's details to UserData and UserChat Models
         try:
-            user_instance = UserData.objects.get(pk=self.from_data.get(constants.ID))
+            user_instance = UserData.objects.get(pk=self.from_data[ID])
             user_chat_instance = UserChat.objects.get(
-                chat_id=self.chat_data.get(constants.ID),
-                user_id__id=self.from_data.get(constants.ID),
+                chat_id=self.chat_data[ID],
+                user__id=self.from_data[ID],
             )
         except (UserData.DoesNotExist, UserChat.DoesNotExist):
             user_serializer = UserDataSerializer(data=self.from_data)
@@ -47,7 +47,7 @@ class TelegramEvents:
                 user_data_rec = UserData.objects.create(**self.from_data)
                 user_data_rec.save()
                 save_userchat(self.chat_data, user_data_rec)
-            elif user_serializer.errors.get(constants.ID):
+            elif user_serializer.errors[ID]:
                 # User already exists in user data model but does not exist in userchat model
                 save_userchat(self.chat_data, user_instance)
             return True
