@@ -5,11 +5,8 @@ ID = "id"
 MESSAGE = "message"
 CHAT = "chat"
 FROM = "from"
-TEXT = "text"
 OK = "ok"
-NEW_CHAT_PARTICIPANT = "new_chat_participant"
 USERNAME = "username"
-NEW_CHAT_TITLE = "new_chat_title"
 USER = "user"
 USER_CHAT = "User chat"
 UPADTING = "Updating"
@@ -28,8 +25,16 @@ BOT_TOKEN = os.environ["TOKEN"]
 BOT_USERNAME = os.environ["BOT_USERNAME"]
 
 # Telegram Events
-TELEGRAM_EVENTS = {
-    "new_chat_participant",
-    "new_chat_title",
-    "text",
+TEXT = "text"
+NEW_CHAT_PARTICIPANT = "new_chat_participant"
+NEW_CHAT_TITLE = "new_chat_title"
+
+
+ANON = "*" * 16
+REPLACE = {
+    "id": 0,
+    "username": ANON,
+    "first_name": ANON,
+    "last_name": ANON,
+    "language_code": "**",
 }
