@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from . import constants
 from .logger import logger
-from .services import set_webhook
+from .services import set_webhook, anonymize
 from .telegramevents import TelegramEvents
 
 
@@ -86,22 +86,19 @@ class ListenMessages(APIView):
         try:
             message = request.data.get(constants.MESSAGE)
             event = TelegramEvents(message)
-            # TELEGRAM_EVENTS is a set of event names :: {
-            # "new_chat_participant",
-            # "new_chat_title",
-            # "text",
-            # }
-            # Here taking out the common event between set and incoming request_data
-            # and calling the method from TELEGRAM_EVENTS class
-            getattr(event, list(constants.TELEGRAM_EVENTS.intersection(message))[0])()
 
-        except IndexError as index_error:
-            logger.exception(index_error)
-        except AttributeError as attribute_error:
-            logger.exception(attribute_error)
-        except serializers.ValidationError as validation_error:
-            logger.exception(validation_error)
-        except Exception as e:
-            logger.exception(e)
+            if constants.NEW_CHAT_PARTICIPANT in message:
+                event.new_chat_participant()
+            elif constants.NEW_CHAT_TITLE in message:
+                event.new_chat_title()
+            elif constants.TEXT in message:
+                event.text()
+            else:
+                raise ValueError(
+                    f"Unrecognized event in message: {anonymize(message)!r}"
+                )
+
+        except Exception as exeception:
+            logger.exception(exeception)
 
         return Response(constants.OK)

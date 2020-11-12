@@ -40,3 +40,18 @@ def save_userchat(chat_data, user_data_inst):
         chat_id=chat_data.get(constants.ID), user_id=user_data_inst
     )
     user_chat_record.save()
+
+
+def anonymize(dict_: dict) -> None:
+    """
+    Recursively anonymize values in ``dict_`` in place.
+    """
+    for key, value in dict_.items():
+        if isinstance(value, dict):
+            anonymize(value)
+        elif isinstance(value, list) and all(isinstance(v, dict) for v in value):
+            for v in value:
+                anonymize(v)
+        elif key in constants.REPLACE:
+            dict_[key] = constants.REPLACE[key]
+    return dict_
