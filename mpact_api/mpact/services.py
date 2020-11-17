@@ -52,4 +52,3 @@ def anonymize(dict_: dict) -> None:
                 anonymize(v)
         elif key in REPLACE:
             dict_[key] = REPLACE[key]
-    return dict_
