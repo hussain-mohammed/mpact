@@ -1,8 +1,14 @@
-from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .constants import MESSAGE, NEW_CHAT_PARTICIPANT, NEW_CHAT_TITLE, OK, TEXT
+from .constants import (
+    LEFT_CHAT_PARTICIPANT,
+    MESSAGE,
+    NEW_CHAT_PARTICIPANT,
+    NEW_CHAT_TITLE,
+    OK,
+    TEXT,
+)
 from .logger import logger
 from .services import anonymize, set_webhook
 from .telegramevents import TelegramEvents
@@ -93,6 +99,8 @@ class ListenMessages(APIView):
                 event.new_chat_title()
             elif TEXT in message:
                 event.text()
+            elif LEFT_CHAT_PARTICIPANT in message:
+                event.left_chat_participant()
             else:
                 raise ValueError(
                     f"Unrecognized event in message: {anonymize(message)!r}"

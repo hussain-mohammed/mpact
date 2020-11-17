@@ -32,6 +32,7 @@ class ChatData(models.Model):
 class UserChat(models.Model):
     chat_id = models.CharField(max_length=50)
     user = models.ForeignKey(UserData, on_delete=models.CASCADE)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"chat_id: {self.chat_id}, user: {self.user}"
