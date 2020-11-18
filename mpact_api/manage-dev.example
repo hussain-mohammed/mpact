@@ -1,0 +1,8 @@
+#!/bin/sh
+
+export SECRET_KEY=750UrRKyK0nSX6cASp77hj6Sfb38LvJfAPmP1aIxqE2sDgsfKacQ6vTdSitiry6F
+export TOKEN=1234567890:oMM9WNHx_7RlUYstgg36hEAeqg0QoPAKHsw
+export BOT_USERNAME=rodney_copperbot
+export ALLOWED_HOSTS='127.0.0.1 localhost'
+
+python3 manage.py $*
