@@ -15,12 +15,7 @@ def set_webhook():
 
 
 def save_chatdata(chat_data, chat_instance=None):
-    if chat_instance:
-        # To update already existing record
-        chat_serializer = ChatDataSerializer(chat_instance, data=chat_data)
-    else:
-        # To create a new record
-        chat_serializer = ChatDataSerializer(data=chat_data)
+    chat_serializer = ChatDataSerializer(chat_instance, data=chat_data)
     if chat_serializer.is_valid(raise_exception=True):
         chat_serializer.save()
 
