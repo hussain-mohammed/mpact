@@ -1,104 +1,47 @@
-from rest_framework import serializers
-from rest_framework.response import Response
+import asyncio
+
+from django.http import HttpResponse
 from rest_framework.views import APIView
 
-from .constants import MESSAGE, NEW_CHAT_PARTICIPANT, NEW_CHAT_TITLE, OK, TEXT
-from .logger import logger
-from .services import anonymize, set_webhook
-from .telegramevents import TelegramEvents
+from .services import get_dialogs, login, logout, send_msg
+
+loop = asyncio.get_event_loop()
 
 
-class Webhook(APIView):
+class Login(APIView):
     """
-    This is only called once for the webhook setup.
-    """
-
-    def get(self, request):
-        webhook = set_webhook()
-        if webhook:
-            return Response("webhook setup ok")
-        else:
-            return Response("webhook setup failed")
-
-
-class ListenMessages(APIView):
-    """
-    Telegram webhook makes a post request.
+    It is used to login into telegram
     """
 
     def post(self, request):
-        """
-        Sample ``request.data``::
-        {
-            "update_id": 30927953,
-            "message": {
-                "message_id": 51,
-                "from": {
-                    "id": 1229986355,
-                    "is_bot": False,
-                    "first_name": "John",
-                    "last_name": "Walter",
-                    "language_code": "en"
-                },
-                "chat": {
-                    "id": -433354696,
-                    "title": "Testing Group",
-                    "type": "group",
-                    "all_members_are_administrators": True
-                },
-                "date": 1604317469,
+        # request.data will contain phone or code.
+        data = request.data
+        return HttpResponse(loop.run_until_complete(login(data)))
 
-                /** Someone sends a message in a group: */
-                "text": "Hello, How are you?"
 
-                /** Someone joins a chat: */
-                "new_chat_participant": {
-                    "id": 1321604047,
-                    "is_bot": True,
-                    "first_name": "demo_bot",
-                    "username": "test_bot"
-                },
-                "new_chat_member": {
-                    "id": 1321604047,
-                    "is_bot": True,
-                    "first_name": "demo_bot",
-                    "username": "test_bot"
-                },
-                "new_chat_members": [
-                    {
-                            "id": 1321604047,
-                            "is_bot": True,
-                            "first_name": "demo_bot",
-                            "username": "test_bot"
-                    }
-                ]
+class Logout(APIView):
+    """
+    It is used to log out from telegram.
+    """
 
-                /** Someone leaves a chat: */
-                "left_chat_member": {
-                    "id": 879250491,
-                    "is_bot": False,
-                    "first_name": "John",
-                    "last_name": "Walter"
-                }
-            }
-        }
-        """
-        try:
-            message = request.data[MESSAGE]
-            event = TelegramEvents(message)
+    def get(self, request):
+        return HttpResponse(loop.run_until_complete(logout()))
 
-            if NEW_CHAT_PARTICIPANT in message:
-                event.new_chat_participant()
-            elif NEW_CHAT_TITLE in message:
-                event.new_chat_title()
-            elif TEXT in message:
-                event.text()
-            else:
-                raise ValueError(
-                    f"Unrecognized event in message: {anonymize(message)!r}"
-                )
 
-        except Exception as exeception:
-            logger.exception(exeception)
+class SendMessage(APIView):
+    """
+    This is a sample api to send a message.
+    """
 
-        return Response(OK)
+    def post(self, request):
+        data = request.data
+        return HttpResponse(loop.run_until_complete(send_msg(data)))
+
+
+class Dialog(APIView):
+    """
+    It is used to retrive dialogs(open conversations)
+    """
+
+    def get(self, request):
+        return HttpResponse(loop.run_until_complete(get_dialogs()))

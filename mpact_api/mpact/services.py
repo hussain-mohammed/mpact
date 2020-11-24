@@ -1,55 +1,71 @@
-from telegram.ext import Updater
+from telethon import TelegramClient
 
-from .constants import BOT_TOKEN, ID, MESSAGE, REPLACE, WEBHOOK_URL
-from .models import UserChat, UserData
-from .serializers import ChatDataSerializer, UserDataSerializer
+from .constants import (
+    BOT_TOKEN,
+    CODE,
+    LOGOUT,
+    MESSAGE,
+    MESSAGE_SENT,
+    NOT_AUTHORIZED,
+    PHONE,
+    TELEGRAM_API_HASH,
+    TELEGRAM_API_ID,
+)
+from .logger import logger
 
-updater = Updater(BOT_TOKEN, use_context=True)
-dispatcher = updater.dispatcher
+# Remember to use your own values from my.telegram.org!
+api_id = TELEGRAM_API_ID
+api_hash = TELEGRAM_API_HASH
+bot_token = BOT_TOKEN
+# loop = asyncio.get_event_loop()
+client = TelegramClient("anon", api_id, api_hash)
+bot = TelegramClient("bot", api_id, api_hash).start(bot_token=bot_token)
 
 
-def set_webhook():
-    # TODO: we can move this to config file or keep this as a seperate script.
-    webhook = updater.bot.setWebhook(WEBHOOK_URL, allowed_updates=[MESSAGE])
-    return webhook  # returns True or False
+def connection(func):
+    async def inner_function(*args, **kwargs):
+        try:
+            # Start the client before we start serving
+            await client.connect()
+            results = await func(*args, **kwargs)
+            # After serving (near shutdown), clean up the client
+            await client.disconnect()
+            return results
+        except Exception as exception:
+            logger.exception(exception)
+            raise
+
+    return inner_function
 
 
-def save_chatdata(chat_data, chat_instance=None):
-    if chat_instance:
-        # To update already existing record
-        chat_serializer = ChatDataSerializer(chat_instance, data=chat_data)
+@connection
+async def login(data):
+    if CODE in data:
+        user_details = await client.sign_in(code=data[CODE])
+        return user_details
     else:
-        # To create a new record
-        chat_serializer = ChatDataSerializer(data=chat_data)
-    if chat_serializer.is_valid(raise_exception=True):
-        chat_serializer.save()
+        # sending otp to phone number
+        code_request = await client.send_code_request(data[PHONE])
+        return code_request
 
 
-def save_userdata(userdata):
-    user_serializer = UserDataSerializer(data=userdata)
-    if user_serializer.is_valid(raise_exception=True):
-        user_data_rec = UserData.objects.create(**userdata)
-        user_data_rec.save()
-        return user_data_rec
+@connection
+async def logout():
+    if await client.is_user_authorized():
+        await client.log_out()
+    return LOGOUT
 
 
-def save_userchat(chat_data, user_data_inst):
-    user_chat_record = UserChat.objects.create(
-        chat_id=chat_data[ID], user=user_data_inst
-    )
-    user_chat_record.save()
+@connection
+async def send_msg(data):
+    if await client.is_user_authorized():
+        await client.send_message(-488152794, data[MESSAGE])
+    return MESSAGE_SENT
 
 
-def anonymize(dict_: dict) -> None:
-    """
-    Recursively anonymize values in ``dict_`` in place.
-    """
-    for key, value in dict_.items():
-        if isinstance(value, dict):
-            anonymize(value)
-        elif isinstance(value, list) and all(isinstance(v, dict) for v in value):
-            for v in value:
-                anonymize(v)
-        elif key in REPLACE:
-            dict_[key] = REPLACE[key]
-    return dict_
+@connection
+async def get_dialogs():
+    if await client.is_user_authorized():
+        dialogs = await client.get_dialogs()
+        return dialogs
+    return NOT_AUTHORIZED

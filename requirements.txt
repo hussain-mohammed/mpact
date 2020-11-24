@@ -1,4 +1,4 @@
 django~=2.2
 psycopg2==2.8.6
-python-telegram-bot==13.0
+Telethon==1.17.5
 djangorestframework==3.12.1

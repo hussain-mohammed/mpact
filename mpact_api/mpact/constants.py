@@ -1,37 +1,13 @@
 import os
 
-
-ID = "id"
+CODE = "code"
+PHONE = "phone"
 MESSAGE = "message"
-CHAT = "chat"
-FROM = "from"
-OK = "ok"
-USERNAME = "username"
-USER = "user"
-USER_CHAT = "User chat"
-UPADTING = "Updating"
-CREATING = "Creating"
-WEBHOOK_URL = "https://f784fbaa700a.ngrok.io/listen_msg"
-
-# Response Messages
-CREATE_UPDATE_MSG = "%s the %s data record: %s"
-INVALID_MSG = "Could not save the %s data, Invalid data"
-DATA_SAVED = "%s data saved"
+LOGOUT = "Logout successful"
+MESSAGE_SENT = "Message sent"
+NOT_AUTHORIZED = "Not Authorized"
 
 # Environment Variables
-BOT_TOKEN = os.environ["TOKEN"]
-BOT_USERNAME = os.environ["BOT_USERNAME"]
-
-# Telegram Events
-TEXT = "text"
-NEW_CHAT_PARTICIPANT = "new_chat_participant"
-NEW_CHAT_TITLE = "new_chat_title"
-
-ANON = "*" * 16
-REPLACE = {
-    "id": 0,
-    "username": ANON,
-    "first_name": ANON,
-    "last_name": ANON,
-    "language_code": "**",
-}
+TELEGRAM_API_ID = os.environ["TELEGRAM_API_ID"]
+TELEGRAM_API_HASH = os.environ["TELEGRAM_API_HASH"]
+BOT_TOKEN = os.environ["BOT_TOKEN"]
