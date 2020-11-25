@@ -3,3 +3,5 @@
 __pycache__
 .vscode
 *.session
+venv/
+mpact_api/manage-dev
