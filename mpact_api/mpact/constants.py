@@ -1,5 +1,6 @@
 import os
 
+CHAT_ID = "chat_id"
 CODE = "code"
 PHONE = "phone"
 MESSAGE = "message"
