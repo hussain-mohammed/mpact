@@ -27,7 +27,6 @@ A Telegram-based expert support system
 
 ## Run
 
-    $ cd mpact_api
     $ ./manage.py runserver
 
 ## There is a script for that
