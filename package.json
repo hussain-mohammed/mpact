@@ -1,0 +1,28 @@
+{
+  "name": "mpact",
+  "version": "1.0.0",
+  "description": "A Telegram-based expert support system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "webpack --mode development"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hussain-mohammed/mpact.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hussain-mohammed/mpact/issues"
+  },
+  "homepage": "https://github.com/hussain-mohammed/mpact#readme",
+  "devDependencies": {
+    "webpack": "^5.9.0",
+    "webpack-cli": "^4.2.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.20"
+  }
+}

@@ -5,3 +5,4 @@ __pycache__
 *.session
 venv/
 mpact_api/manage-dev
+node_modules
