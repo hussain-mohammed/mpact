@@ -1,9 +1,23 @@
 const path = require('path');
-
+const { VueLoaderPlugin } = require('vue-loader')
 module.exports = {
-  entry: './assets/index.js',  // path to our input file
+
+  entry: [
+    './static/index.js'
+  ],
   output: {
-    filename: 'index-bundle.js',  // output bundle file name
-    path: path.resolve(__dirname, './static'),  // path to our Django static directory
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'static/dist/'),
   },
-};
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        use: 'vue-loader'
+      }
+    ]
+  },
+  plugins: [
+    new VueLoaderPlugin()
+  ]
+}
