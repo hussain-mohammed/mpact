@@ -54,3 +54,7 @@ You can generate a secret key with
 Now you can run a development server with
 
     $ ./manage-dev runserver
+
+Create a super user with the below command and enter the phone number(with country code eg., `+11122233344`) and password.
+
+    $ ./manage-dev createsuperuser
