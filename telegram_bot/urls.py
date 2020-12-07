@@ -18,7 +18,7 @@ from django.urls import path, include
 from django.views.generic.base import TemplateView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('mpact.urls')),
-    path('hello-webpack/', TemplateView.as_view(template_name='hello_webpack.html'))
+    path("admin/", admin.site.urls),
+    path("api/", include("mpact.urls")),
+    path("login/", TemplateView.as_view(template_name="index.html")),
 ]
