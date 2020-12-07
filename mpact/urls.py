@@ -1,10 +1,10 @@
 from django.urls import path
 
-from . import views
+from .views import Dialog, Login, Logout, SendMessage
 
 urlpatterns = [
-    path("login", views.Login.as_view()),
-    path("logout", views.Logout.as_view()),
-    path("send", views.SendMessage.as_view()),
-    path("dialogs", views.Dialog.as_view()),
+    path("login", Login.as_view()),
+    path("logout", Logout.as_view()),
+    path("send", SendMessage.as_view()),
+    path("dialogs", Dialog.as_view()),
 ]

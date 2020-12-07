@@ -1,8 +1,9 @@
-from telethon import TelegramClient
 from django.http import HttpResponse
+from telethon import TelegramClient
 
 from .constants import (
     BOT_TOKEN,
+    CHAT_ID,
     CODE,
     LOGOUT,
     MESSAGE,
@@ -11,9 +12,9 @@ from .constants import (
     PHONE,
     TELEGRAM_API_HASH,
     TELEGRAM_API_ID,
-    CHAT_ID,
 )
 from .logger import logger
+from .models import CustomUser
 
 
 def get_anon_client() -> TelegramClient:
@@ -50,6 +51,9 @@ async def login(data):
     """
     Returns the logged in user details or hash code & other details for code request
     """
+    user = get_or_none(CustomUser, phone=data[PHONE])
+    if not user:
+        return "Phone Number is not registered."
     client = get_anon_client()
     await client.connect()
     if CODE in data:
@@ -92,3 +96,10 @@ async def get_dialog():
             dialogs = await client.get_dialogs()
             return dialogs
         return NOT_AUTHORIZED
+
+
+def get_or_none(model, **kwargs):
+    try:
+        return model.objects.get(**kwargs)
+    except model.DoesNotExist:
+        return None
