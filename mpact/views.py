@@ -1,8 +1,9 @@
 import asyncio
 
+from django.http import HttpResponse
 from rest_framework.views import APIView
 
-from .services import get_dialog, login, logout, send_msg, exception
+from .services import get_dialog, login, logout, send_msg
 
 
 def new_or_current_event_loop():
@@ -19,11 +20,10 @@ class Login(APIView):
     It is used to login into telegram
     """
 
-    @exception
     def post(self, request):
         # request.data will contain phone or code.
         data = request.data
-        return new_or_current_event_loop().run_until_complete(login(data))
+        return HttpResponse(new_or_current_event_loop().run_until_complete(login(data)))
 
 
 class Logout(APIView):
@@ -31,9 +31,8 @@ class Logout(APIView):
     It is used to log out from telegram.
     """
 
-    @exception
     def get(self, request):
-        return new_or_current_event_loop().run_until_complete(logout())
+        return HttpResponse(new_or_current_event_loop().run_until_complete(logout()))
 
 
 class SendMessage(APIView):
@@ -41,10 +40,11 @@ class SendMessage(APIView):
     This is a sample api to send a message.
     """
 
-    @exception
     def post(self, request):
         data = request.data
-        return new_or_current_event_loop().run_until_complete(send_msg(data))
+        return HttpResponse(
+            new_or_current_event_loop().run_until_complete(send_msg(data))
+        )
 
 
 class Dialog(APIView):
@@ -52,6 +52,7 @@ class Dialog(APIView):
     It is used to retrive dialogs(open conversations)
     """
 
-    @exception
     def get(self, request):
-        return new_or_current_event_loop().run_until_complete(get_dialog())
+        return HttpResponse(
+            new_or_current_event_loop().run_until_complete(get_dialog())
+        )
