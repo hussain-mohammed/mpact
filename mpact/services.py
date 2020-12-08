@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from telethon import TelegramClient
 
@@ -14,7 +15,6 @@ from .constants import (
     TELEGRAM_API_ID,
 )
 from .logger import logger
-from .models import CustomUser
 
 
 def get_anon_client() -> TelegramClient:
@@ -51,7 +51,7 @@ async def login(data):
     """
     Returns the logged in user details or hash code & other details for code request
     """
-    user = get_or_none(CustomUser, phone=data[PHONE])
+    user = get_or_none(User, profile__phone=data[PHONE])
     if not user:
         return "Phone Number is not registered."
     client = get_anon_client()
