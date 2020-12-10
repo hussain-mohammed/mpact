@@ -1,18 +1,28 @@
-from django.contrib.auth.models import User
 from contextlib import asynccontextmanager
 
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from telethon import TelegramClient
+from telethon.errors import (
+    PhoneCodeExpiredError,
+    PhoneCodeInvalidError,
+    SessionPasswordNeededError,
+)
 
 from .constants import (
     BOT_TOKEN,
     CHAT_ID,
     CODE,
+    INVALID_CODE,
     LOGOUT,
     MESSAGE,
     MESSAGE_SENT,
     NOT_AUTHORIZED,
+    PASSWORD,
+    PASSWORD_REQUIRED,
     PHONE,
+    PHONE_CODE_HASH,
+    PHONE_NOT_REGISTERED,
     TELEGRAM_API_HASH,
     TELEGRAM_API_ID,
 )
@@ -53,15 +63,26 @@ async def login(data):
     """
     user = get_or_none(User, profile__phone=data[PHONE])
     if not user:
-        return "Phone Number is not registered in our system."
+        return PHONE_NOT_REGISTERED
 
     async with get_anon_client() as client:
-        if CODE in data:
+        if PASSWORD in data:
             user_details = await client.sign_in(
-                phone=data[PHONE],
-                code=data[CODE],
-                phone_code_hash=data["phone_code_hash"],
+                password=data[PASSWORD],
             )
+            await client.disconnect()
+            return user_details
+        elif CODE in data:
+            try:
+                user_details = await client.sign_in(
+                    phone=data[PHONE],
+                    code=data[CODE],
+                    phone_code_hash=data[PHONE_CODE_HASH],
+                )
+            except (PhoneCodeInvalidError, PhoneCodeExpiredError):
+                return INVALID_CODE
+            except SessionPasswordNeededError:
+                return PASSWORD_REQUIRED
             await client.disconnect()
             return user_details
         # sending otp to phone number
