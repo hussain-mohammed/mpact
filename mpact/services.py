@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from telethon import TelegramClient
@@ -17,11 +19,21 @@ from .constants import (
 from .logger import logger
 
 
-def get_anon_client() -> TelegramClient:
+@asynccontextmanager
+async def get_anon_client():
     """
-    Returns a TelegramClient with the session name "anon"
+    TelegramClient is already an async context manager. This context
+    manager connect to the telegram and logs exceptions.
     """
-    return get_telegram_client("anon")
+    try:
+        client = get_telegram_client("anon")
+        await client.connect()
+        yield client
+    except Exception as exception:
+        logger.exception(exception)
+        raise
+    finally:
+        await client.disconnect()
 
 
 def start_bot_client() -> TelegramClient:
@@ -35,37 +47,26 @@ def get_telegram_client(session_name: str) -> TelegramClient:
     return TelegramClient(session_name, TELEGRAM_API_ID, TELEGRAM_API_HASH)
 
 
-def exception(func):
-    def inner_function(*args, **kwargs):
-        try:
-            results = func(*args, **kwargs)
-            return HttpResponse(results)
-        except Exception as exception:
-            logger.exception(exception)
-            raise
-
-    return inner_function
-
-
 async def login(data):
     """
     Returns the logged in user details or hash code & other details for code request
     """
     user = get_or_none(User, profile__phone=data[PHONE])
     if not user:
-        return "Phone Number is not registered."
-    client = get_anon_client()
-    await client.connect()
-    if CODE in data:
-        user_details = await client.sign_in(
-            phone=data[PHONE], code=data[CODE], phone_code_hash=data["phone_code_hash"]
-        )
-        await client.disconnect()
-        return user_details
-    # sending otp to phone number
-    code_request = await client.send_code_request(data[PHONE])
-    await client.disconnect()
-    return code_request
+        return "Phone Number is not registered in our system."
+
+    async with get_anon_client() as client:
+        if CODE in data:
+            user_details = await client.sign_in(
+                phone=data[PHONE],
+                code=data[CODE],
+                phone_code_hash=data["phone_code_hash"],
+            )
+            await client.disconnect()
+            return user_details
+        # sending otp to phone number
+        code_request = await client.send_code_request(data[PHONE])
+        return code_request
 
 
 async def logout():
@@ -99,6 +100,9 @@ async def get_dialog():
 
 
 def get_or_none(model, **kwargs):
+    """
+    Returns model object if exists else None
+    """
     try:
         return model.objects.get(**kwargs)
     except model.DoesNotExist:
