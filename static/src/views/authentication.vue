@@ -32,19 +32,52 @@
               @validate="validatePhoneNumber($event)"
             ></vue-tel-input>
           </Login>
+          <Otp
+            v-if="showOtpPage"
+            @hideOtpComponent="
+              showOtpPage = !showOtpPage;
+              showLoginPage = !showLoginPage;
+            "
+            @reciveOtpText="validateOTP($event)"
+            :phone="phoneNumber"
+          />
+          <div class="login-footer width-404 text-center" v-show="!isInfoHide">
+            <div class="footer-1">
+              Welcome to the official mpact-Telegram web-client.
+            </div>
+            <div
+              class="footer-2 cursor-pointer"
+              @click="isInfoHide = !isInfoHide"
+              v-show="!isInfoHide"
+            >
+              Learn more
+            </div>
+          </div>
+          <Info
+            v-if="isInfoHide"
+            @closeInfoComponent="isInfoHide = false"
+            v-bind:receiveClass="showOtpPage"
+          />
         </div>
       </section>
+      <Toast :text="toastInput" />
     </div>
   </div>
 </template>
  <script>
 const Login = () => import("../components/login.vue");
+const Info = () => import("../components/telegramInfo.vue");
+const Otp = () => import("../components/otp.vue");
+const Toast = () => import("../components/toast.vue");
 
 import $ from "jquery";
 
 export default {
   components: {
     Login,
+    Info,
+    Otp,
+    Toast,
   },
   data() {
     return {
@@ -84,6 +117,10 @@ export default {
     validatePhoneNumber(obj) {
       this.nextButtonValidation = obj.valid;
       this.toastInput = "OTP is sent to Registered Number";
+    },
+    validateOTP(obj) {
+      this.nextButtonValidation = obj.toString().length >= 5;
+      this.toastInput = "verifing the OTP";
     },
   },
 };
