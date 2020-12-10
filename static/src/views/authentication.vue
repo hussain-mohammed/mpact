@@ -41,6 +41,10 @@
             @reciveOtpText="validateOTP($event)"
             :phone="phoneNumber"
           />
+          <TwoFactorAuth
+            v-if="show2FaPage"
+            @recive2FaText="validate2FaText($event)"
+          />
           <div class="login-footer width-404 text-center" v-show="!isInfoHide">
             <div class="footer-1">
               Welcome to the official mpact-Telegram web-client.
@@ -69,6 +73,7 @@ const Login = () => import("../components/login.vue");
 const Info = () => import("../components/telegramInfo.vue");
 const Otp = () => import("../components/otp.vue");
 const Toast = () => import("../components/toast.vue");
+const TwoFactorAuth = () => import("../components/twoFactorAuth.vue");
 
 import $ from "jquery";
 
@@ -78,6 +83,7 @@ export default {
     Info,
     Otp,
     Toast,
+    TwoFactorAuth,
   },
   data() {
     return {
@@ -121,6 +127,10 @@ export default {
     validateOTP(obj) {
       this.nextButtonValidation = obj.toString().length >= 5;
       this.toastInput = "verifing the OTP";
+    },
+    validate2FaText(obj) {
+      this.nextButtonValidation = obj.toString().length >= 5;
+      this.toastInput = "verifing the 2FA code";
     },
   },
 };
