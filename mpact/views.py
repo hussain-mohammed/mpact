@@ -1,8 +1,9 @@
 import asyncio
 
-from django.http import HttpResponse
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .constants import DATA, STATUS
 from .services import get_dialog, login, logout, send_msg
 
 
@@ -23,7 +24,8 @@ class Login(APIView):
     def post(self, request):
         # request.data will contain phone or code.
         data = request.data
-        return HttpResponse(new_or_current_event_loop().run_until_complete(login(data)))
+        result = new_or_current_event_loop().run_until_complete(login(data))
+        return Response(result[DATA], status=result[STATUS])
 
 
 class Logout(APIView):
@@ -32,7 +34,8 @@ class Logout(APIView):
     """
 
     def get(self, request):
-        return HttpResponse(new_or_current_event_loop().run_until_complete(logout()))
+        result = new_or_current_event_loop().run_until_complete(logout())
+        return Response(result[DATA], status=result[STATUS])
 
 
 class SendMessage(APIView):
@@ -42,9 +45,8 @@ class SendMessage(APIView):
 
     def post(self, request):
         data = request.data
-        return HttpResponse(
-            new_or_current_event_loop().run_until_complete(send_msg(data))
-        )
+        result = new_or_current_event_loop().run_until_complete(send_msg(data))
+        return Response(result[DATA], status=result[STATUS])
 
 
 class Dialog(APIView):
@@ -53,6 +55,5 @@ class Dialog(APIView):
     """
 
     def get(self, request):
-        return HttpResponse(
-            new_or_current_event_loop().run_until_complete(get_dialog())
-        )
+        result = new_or_current_event_loop().run_until_complete(get_dialog())
+        return Response(result[DATA], status=result[STATUS])

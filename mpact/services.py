@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from rest_framework import status
 from telethon import TelegramClient
 from telethon.errors import (
     PhoneCodeExpiredError,
@@ -13,6 +13,7 @@ from .constants import (
     BOT_TOKEN,
     CHAT_ID,
     CODE,
+    DATA,
     INVALID_CODE,
     LOGOUT,
     MESSAGE,
@@ -23,8 +24,13 @@ from .constants import (
     PHONE,
     PHONE_CODE_HASH,
     PHONE_NOT_REGISTERED,
+    STATUS,
     TELEGRAM_API_HASH,
     TELEGRAM_API_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    USERNAME,
+    TWO_FA_ENABLED,
 )
 from .logger import logger
 
@@ -63,38 +69,81 @@ async def login(data):
     """
     user = get_or_none(User, profile__phone=data[PHONE])
     if not user:
-        return PHONE_NOT_REGISTERED
+        NOT_AUTHORIZED[DATA][MESSAGE] = PHONE_NOT_REGISTERED
+        return NOT_AUTHORIZED
 
     async with get_anon_client() as client:
         if PASSWORD in data:
-            user_details = await client.sign_in(
-                password=data[PASSWORD],
-            )
-            await client.disconnect()
-            return user_details
+            return await two_factor_auth(client, data)
         elif CODE in data:
-            try:
-                user_details = await client.sign_in(
-                    phone=data[PHONE],
-                    code=data[CODE],
-                    phone_code_hash=data[PHONE_CODE_HASH],
-                )
-            except (PhoneCodeInvalidError, PhoneCodeExpiredError):
-                return INVALID_CODE
-            except SessionPasswordNeededError:
-                return PASSWORD_REQUIRED
-            await client.disconnect()
-            return user_details
+            return await validate_code(client, data)
         # sending otp to phone number
         code_request = await client.send_code_request(data[PHONE])
-        return code_request
+        return {
+            DATA: {PHONE_CODE_HASH: code_request.phone_code_hash},
+            STATUS: status.HTTP_200_OK,
+        }
+
+
+async def two_factor_auth(client, data):
+    """
+    Verify the password entered by the user and
+    returns the user details upon successful login
+    """
+    user_details = await client.sign_in(
+        password=data[PASSWORD],
+    )
+    await client.disconnect()
+    return {
+        DATA: {
+            FIRST_NAME: user_details.first_name,
+            LAST_NAME: user_details.last_name,
+            USERNAME: user_details.username,
+        },
+        STATUS: status.HTTP_200_OK,
+    }
+
+
+async def validate_code(client, data):
+    """
+    validate the code (OTP) & return user details and if two factor authenticated
+    is enabled, it will ask for password.
+    """
+    try:
+        user_details = await client.sign_in(
+            phone=data[PHONE],
+            code=data[CODE],
+            phone_code_hash=data[PHONE_CODE_HASH],
+        )
+    except (PhoneCodeInvalidError, PhoneCodeExpiredError):
+        return {
+            DATA: {MESSAGE: INVALID_CODE},
+            STATUS: status.HTTP_400_BAD_REQUEST,
+        }
+    except SessionPasswordNeededError:
+        return {
+            DATA: {MESSAGE: PASSWORD_REQUIRED, TWO_FA_ENABLED: True},
+            STATUS: status.HTTP_400_BAD_REQUEST,
+        }
+    await client.disconnect()
+    return {
+        DATA: {
+            FIRST_NAME: user_details.first_name,
+            LAST_NAME: user_details.last_name,
+            USERNAME: user_details.username,
+        },
+        STATUS: status.HTTP_200_OK,
+    }
 
 
 async def logout():
     async with get_anon_client() as client:
         if await client.is_user_authorized():
             await client.log_out()
-    return LOGOUT
+    return {
+        DATA: {MESSAGE: LOGOUT},
+        STATUS: status.HTTP_200_OK,
+    }
 
 
 async def send_msg(data):
@@ -105,7 +154,10 @@ async def send_msg(data):
         if await client.is_user_authorized():
             async with await start_bot_client() as bot:
                 await bot.send_message(data[CHAT_ID], data[MESSAGE])
-            return MESSAGE_SENT
+            return {
+                DATA: {MESSAGE: MESSAGE_SENT},
+                STATUS: status.HTTP_200_OK,
+            }
         return NOT_AUTHORIZED
 
 
@@ -116,7 +168,10 @@ async def get_dialog():
     async with get_anon_client() as client:
         if await client.is_user_authorized():
             dialogs = await client.get_dialogs()
-            return dialogs
+            return {
+                DATA: {dialogs: dialogs[0]},
+                STATUS: status.HTTP_200_OK,
+            }
         return NOT_AUTHORIZED
 
 
