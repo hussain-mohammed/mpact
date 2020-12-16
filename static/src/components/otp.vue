@@ -5,11 +5,10 @@
     <div class="phone-number">{{phone}}</div>
     <div class="edit-number text-center cursor-pointer" @click="hideOtpComponent()">Edit phone number</div>
     <div class="otp-info text-center">
-      We've sent the code to the Telegram app on your other device. 
+      We've sent the code to the Telegram app on your mobile device.
     </div>
     <div class="otp-info text-center">Please enter
       the code below.</div>
-    <!-- <div class="otp-info text-center">You will be able to request SMS in --:-- Enter your code</div> -->
     <input type="text" placeholder="Enter your code" class="d-flex justify-content-center text-center input custom-input border-0 mx-auto" @keyup="readOtpText($event)"/>
   </div>
 </template>

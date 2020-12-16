@@ -3,8 +3,8 @@
     <form>
       <h3 class="f2a-title">Password</h3>
       <p class="country-selection text-center">
-        You have enabled Two-step-verification. So Your account is protected
-        with an additional password
+        You have enabled two-step verification, so your account is protected
+        with an additional password.
       </p>
       <input
         type="text"
