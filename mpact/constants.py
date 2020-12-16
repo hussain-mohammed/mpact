@@ -18,7 +18,8 @@ DATA = "data"
 FIRST_NAME = "first_name"
 LAST_NAME = "last_name"
 USERNAME = "username"
-TWO_FA_ENABLED = "2FA_enabled"
+TWO_FA_ENABLED = "is_2FA_enabled"
+IS_SUCCESS = "is_success"
 
 # Environment Variables
 TELEGRAM_API_ID = os.environ["TELEGRAM_API_ID"]
@@ -28,6 +29,6 @@ BOT_TOKEN = os.environ["BOT_TOKEN"]
 
 # Responses
 NOT_AUTHORIZED = {
-    DATA: {MESSAGE: "Not authorized"},
+    DATA: {MESSAGE: "Not authorized", IS_SUCCESS: False},
     STATUS: status.HTTP_401_UNAUTHORIZED,
 }

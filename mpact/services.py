@@ -31,6 +31,7 @@ from .constants import (
     LAST_NAME,
     USERNAME,
     TWO_FA_ENABLED,
+    IS_SUCCESS,
 )
 from .logger import logger
 
@@ -80,7 +81,7 @@ async def login(data):
         # sending otp to phone number
         code_request = await client.send_code_request(data[PHONE])
         return {
-            DATA: {PHONE_CODE_HASH: code_request.phone_code_hash},
+            DATA: {PHONE_CODE_HASH: code_request.phone_code_hash, IS_SUCCESS: True},
             STATUS: status.HTTP_200_OK,
         }
 
@@ -99,6 +100,7 @@ async def two_factor_auth(client, data):
             FIRST_NAME: user_details.first_name,
             LAST_NAME: user_details.last_name,
             USERNAME: user_details.username,
+            IS_SUCCESS: True,
         },
         STATUS: status.HTTP_200_OK,
     }
@@ -115,14 +117,14 @@ async def validate_code(client, data):
             code=data[CODE],
             phone_code_hash=data[PHONE_CODE_HASH],
         )
-    except (PhoneCodeInvalidError, PhoneCodeExpiredError):
-        return {
-            DATA: {MESSAGE: INVALID_CODE},
-            STATUS: status.HTTP_400_BAD_REQUEST,
-        }
     except SessionPasswordNeededError:
         return {
-            DATA: {MESSAGE: PASSWORD_REQUIRED, TWO_FA_ENABLED: True},
+            DATA: {MESSAGE: PASSWORD_REQUIRED, TWO_FA_ENABLED: True, IS_SUCCESS: True},
+            STATUS: status.HTTP_200_OK,
+        }
+    except (PhoneCodeInvalidError, PhoneCodeExpiredError):
+        return {
+            DATA: {MESSAGE: INVALID_CODE, IS_SUCCESS: False},
             STATUS: status.HTTP_400_BAD_REQUEST,
         }
     await client.disconnect()
@@ -131,6 +133,7 @@ async def validate_code(client, data):
             FIRST_NAME: user_details.first_name,
             LAST_NAME: user_details.last_name,
             USERNAME: user_details.username,
+            IS_SUCCESS: True,
         },
         STATUS: status.HTTP_200_OK,
     }
@@ -141,7 +144,7 @@ async def logout():
         if await client.is_user_authorized():
             await client.log_out()
     return {
-        DATA: {MESSAGE: LOGOUT},
+        DATA: {MESSAGE: LOGOUT, IS_SUCCESS: True},
         STATUS: status.HTTP_200_OK,
     }
 
@@ -157,6 +160,7 @@ async def send_msg(data):
             return {
                 DATA: {MESSAGE: MESSAGE_SENT},
                 STATUS: status.HTTP_200_OK,
+                IS_SUCCESS: True,
             }
         return NOT_AUTHORIZED
 
@@ -171,6 +175,7 @@ async def get_dialog():
             return {
                 DATA: {dialogs: dialogs[0]},
                 STATUS: status.HTTP_200_OK,
+                IS_SUCCESS: True,
             }
         return NOT_AUTHORIZED
 
