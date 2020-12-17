@@ -1,10 +1,6 @@
-from django.contrib.auth.models import User
 from contextlib import asynccontextmanager
 
-from django.http import HttpResponse
-from telethon import TelegramClient
-
-from .constants import (
+from constants import (
     BOT_TOKEN,
     CHAT_ID,
     CODE,
@@ -16,7 +12,10 @@ from .constants import (
     TELEGRAM_API_HASH,
     TELEGRAM_API_ID,
 )
-from .logger import logger
+from django.contrib.auth.models import User
+from logger import logger
+from telethon import TelegramClient
+from utils import get_or_none
 
 
 @asynccontextmanager
@@ -97,13 +96,3 @@ async def get_dialog():
             dialogs = await client.get_dialogs()
             return dialogs
         return NOT_AUTHORIZED
-
-
-def get_or_none(model, **kwargs):
-    """
-    Returns model object if exists else None
-    """
-    try:
-        return model.objects.get(**kwargs)
-    except model.DoesNotExist:
-        return None
