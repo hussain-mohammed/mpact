@@ -7,3 +7,4 @@ venv/
 manage-dev
 node_modules
 dist
+bot.out
