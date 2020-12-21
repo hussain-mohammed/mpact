@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Profile, ChatData
+from .models import Profile, Chat, Bot, Individual
 
-admin.site.register(ChatData)
+admin.site.register(Chat)
+admin.site.register(Bot)
+admin.site.register(Individual)
 
 
 class UserProfileInline(admin.StackedInline):
