@@ -21,7 +21,8 @@ from rest_framework import status
 from telethon import TelegramClient, functions
 from utils import get_or_none
 
-from .models import ChatData
+from .models import Chat
+from .serializers import ChatSerializer
 
 
 @asynccontextmanager
@@ -99,30 +100,10 @@ async def get_dialog():
     """
     async with get_anon_client() as client:
         if await client.is_user_authorized():
-            return await bulid_json(client)
+            chats = Chat.objects.all()
+            chats_serializer = ChatSerializer(chats, many=True)
+            return {
+                DATA: {"dialogs": chats_serializer.data, IS_SUCCESS: True},
+                STATUS: status.HTTP_200_OK,
+            }
         return NOT_AUTHORIZED
-
-
-async def bulid_json(client):
-    dialogs = ChatData.objects.all()
-    dialogs_json = []
-    for dialog in dialogs:
-        temp_dialog = {}
-        temp_dialog[CHAT_ID] = dialog.chat_id
-        temp_dialog["title"] = dialog.title
-        peer_details = await client(
-            functions.messages.GetPeerDialogsRequest(peers=[int(dialog.chat_id)])
-        )
-        temp_dialog["unread_count"] = peer_details.dialogs[0].unread_count
-
-        msgs = await client.get_messages(int(dialog.chat_id))
-        temp_dialog[MESSAGE] = msgs[0].message
-
-        user = await client.get_entity(msgs[0].from_id.user_id)
-        temp_dialog["first_name"] = user.first_name
-        dialogs_json.append(temp_dialog)
-
-    return {
-        DATA: {"dialogs": dialogs_json, IS_SUCCESS: True},
-        STATUS: status.HTTP_200_OK,
-    }
