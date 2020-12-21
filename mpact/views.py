@@ -2,9 +2,11 @@ import asyncio
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from .constants import DATA, STATUS
 from .services import get_dialog, login, logout, send_msg
+from constants import DATA, STATUS
 
 
 def new_or_current_event_loop():

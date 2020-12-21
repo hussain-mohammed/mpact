@@ -17,3 +17,12 @@ class Profile(models.Model):
         message="Phone number is invalid.",
     )
     phone = models.CharField(max_length=20, validators=[phone_regex, validate_phone])
+
+
+class ChatData(models.Model):
+    chat_id = models.CharField(max_length=50)
+    title = models.CharField(max_length=350)
+    created_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.chat_id} - {self.title}"
