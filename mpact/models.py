@@ -20,7 +20,7 @@ class Profile(models.Model):
 
 
 class Chat(models.Model):
-    chat_id = models.IntegerField()
+    chat_id = models.IntegerField(unique=True)
     title = models.CharField(max_length=350)
     created_at = models.DateTimeField()
 
@@ -30,10 +30,15 @@ class Chat(models.Model):
 
 class Bot(models.Model):
     chat = models.OneToOneField(Chat, on_delete=models.CASCADE)
-    bot_id = models.IntegerField(unique=True)
+    bot_id = models.IntegerField()
     username = models.CharField(max_length=350)
     first_name = models.CharField(max_length=350)
     last_name = models.CharField(max_length=350, null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["chat", "bot_id"], name="unique_chat_bot")
+        ]
 
     def __str__(self):
         return f"{self.bot_id} - {self.username}"
@@ -41,10 +46,17 @@ class Bot(models.Model):
 
 class Individual(models.Model):
     bot = models.ForeignKey(Bot, related_name="individuals", on_delete=models.CASCADE)
-    individual_id = models.IntegerField(unique=True)
+    individual_id = models.IntegerField()
     username = models.CharField(max_length=350, null=True)
     first_name = models.CharField(max_length=350)
     last_name = models.CharField(max_length=350)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["bot", "individual_id"], name="unique_bot_individuals"
+            )
+        ]
 
     def __str__(self):
         return f"{self.individual_id} - {self.first_name}"
