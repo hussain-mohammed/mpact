@@ -32,14 +32,22 @@ async def msg_handler(event):
                 user_details = await bot_client.get_entity(
                     event.message.peer_id.user_id
                 )
-                bot_inst = Bot.objects.get(bot_id=current_bot.id)
-                Individual.objects.create(
-                    bot=bot_inst,
-                    individual_id=user_details.id,
-                    username=user_details.username,
-                    first_name=user_details.first_name,
-                    last_name=user_details.last_name,
-                )
+                bots = Bot.objects.filter(bot_id=current_bot.id)
+
+                for bot in bots:
+                    group_id = bot.chat.chat_id
+                    # fetching all the users of a group
+                    users = await bot_client.get_participants(group_id)
+                    for user in users:
+                        # checking if the user is part of any group
+                        if user.first_name == user_details.first_name:
+                            Individual.objects.get_or_create(
+                                bot=bot,
+                                individual_id=user_details.id,
+                                username=user_details.username,
+                                first_name=user_details.first_name,
+                                last_name=user_details.last_name,
+                            )
                 await event.reply("Welcome! How may i help you?")
 
     except Exception as exception:
