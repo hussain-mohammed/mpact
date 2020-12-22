@@ -64,7 +64,7 @@
           />
         </div>
       </section>
-      <Toast :text="toastInput" />
+      <Toast :text="toastInput" :hasError="toastError" />
     </div>
   </div>
 </template>
@@ -93,7 +93,11 @@ export default {
       show2FaPage: false,
       nextButtonValidation: false,
       phoneNumber: "",
+      formattedPhoneNumber: "",
+      otpNumber: "",
+      phoneCodeHash: "",
       toastInput: "",
+      toastError: false,
       telephoneProps: {
         required: true,
         mode: "international",
@@ -103,34 +107,77 @@ export default {
   methods: {
     async moveToNextPage() {
       if (this.showLoginPage) {
-        console.log("submit phone number");
-
-        this.showLoginPage = this.show2FaPage = false;
-        this.showOtpPage = true;
+        try {
+          this.toastError = false;
+          const data = await this.$http.post("/login", {
+            phone: this.formattedPhoneNumber,
+          });
+          if (data && data.data && data.data.is_success) {
+            this.phoneCodeHash = data.data.phone_code_hash;
+            this.toastInput = "OTP is sent to registered number";
+            this.showLoginPage = this.show2FaPage = false;
+            this.showOtpPage = true;
+            this.showNotification();
+          }
+        } catch (e) {
+          this.toastError = this.nextButtonValidation = true;
+          this.toastInput = "Phone number is not registered";
+          this.showNotification();
+        }
       } else if (this.showOtpPage) {
-        this.showOtpPage = this.showOtpPage = false;
-        this.show2FaPage = true;
-        console.log("submit otp");
-        // const data = await this.$http.get(
-        //   "https://jsonplaceholder.typicode.com/todos/1"
-        // );
+        this.toastInput = "Verifing the OTP";
+        this.toastError = false;
+        this.showNotification();
+        try {
+          const data = await this.$http.post("/login", {
+            phone: this.formattedPhoneNumber,
+            code: this.otpNumber,
+            phone_code_hash: this.phoneCodeHash,
+          });
+          if (data && data.data && data.data.is_success) {
+            const { is_2FA_enabled = false } = data.data;
+            this.showOtpPage = this.showLoginPage = false;
+            this.show2FaPage = true;
+            !is_2FA_enabled ? this.$router.push("/chat") : "";
+          }
+        } catch (e) {
+          this.toastInput = "Entered wrong OTP";
+          this.toastError = true;
+          this.showNotification();
+        }
       } else {
-        // this.$router.push('/chat');
+        this.toastError = false;
+        this.toastInput = "Verifing the 2FA code";
+        this.showNotification();
+        try {
+          const data = await this.$http.post("/login", {
+            phone: this.formattedPhoneNumber,
+            password: this.TwoFactorAuthCode,
+          });
+          if (data && data.data && data.data.is_success) {
+            this.$router.push("/chat");
+          }
+        } catch (e) {
+          this.toastInput = "Entered wrong code";
+          this.toastError = true;
+          this.showNotification();
+        }
       }
-      $(".toast").toast("show");
-      this.nextButtonValidation = false;
     },
     validatePhoneNumber(obj) {
       this.nextButtonValidation = obj.valid;
-      this.toastInput = "OTP is sent to Registered Number";
+      this.formattedPhoneNumber = obj.number.e164;
     },
     validateOTP(obj) {
       this.nextButtonValidation = obj.toString().length >= 5;
-      this.toastInput = "verifing the OTP";
+      this.otpNumber = obj.toString();
     },
     validate2FaText(obj) {
       this.nextButtonValidation = obj.toString().length >= 5;
-      this.toastInput = "verifing the 2FA code";
+      this.TwoFactorAuthCode = obj.toString();
+    },
+    showNotification() {
+      $(".toast").toast("show");
     },
   },
 };

@@ -7,7 +7,7 @@
         with an additional password.
       </p>
       <input
-        type="text"
+        type="password"
         placeholder="Enter your code"
         class="d-flex justify-content-center text-center input custom-input border-0 mx-auto"
         @keyup="read2FaText($event)"

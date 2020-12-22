@@ -4,10 +4,10 @@ import Router from 'vue-router';
 Vue.use(Router)
 
 export default new Router({
-  // mode: "history",
+  mode: "history",
   routes: [
     {
-      path: '',
+      path: '/login',
       name: 'Auth',
       component: () => import('../views/authentication.vue')
     }
