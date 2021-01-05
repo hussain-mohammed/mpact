@@ -1,0 +1,31 @@
+:root {
+    --telegram-primary: #5682a3;
+    --telegram-secondary: #e7ebf0;
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+.width-404{
+    width: 404px;
+}
+
+.left-right-0{
+    left: 0px;
+    right: 0px;
+}
+
+.d-grid{
+    display: grid;
+}
+
+.d-flex{
+    display: flex;
+}
+
+.cursor-pointer{
+    cursor: pointer;
+}
