@@ -20,43 +20,51 @@ class Profile(models.Model):
 
 
 class Chat(models.Model):
-    chat_id = models.IntegerField(unique=True)
-    title = models.CharField(max_length=350)
+    id = models.IntegerField(primary_key=True)
+    title = models.TextField()
     created_at = models.DateTimeField()
 
     def __str__(self):
-        return f"{self.chat_id} - {self.title}"
+        return f"{self.id} - {self.title}"
 
 
 class Bot(models.Model):
-    chat = models.OneToOneField(Chat, on_delete=models.CASCADE)
-    bot_id = models.IntegerField()
-    username = models.CharField(max_length=350)
-    first_name = models.CharField(max_length=350)
-    last_name = models.CharField(max_length=350, null=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["chat", "bot_id"], name="unique_chat_bot")
-        ]
+    id = models.IntegerField(primary_key=True)
+    username = models.TextField()
+    first_name = models.TextField()
+    last_name = models.TextField(null=True)
+    chats = models.ManyToManyField(Chat, through="ChatBot")
 
     def __str__(self):
-        return f"{self.bot_id} - {self.username}"
+        return f"{self.id} - {self.username}"
+
+
+class ChatBot(models.Model):
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"chat_id: {self.chat.id} - bot_username: {self.bot.username}"
 
 
 class Individual(models.Model):
-    bot = models.ForeignKey(Bot, related_name="individuals", on_delete=models.CASCADE)
-    individual_id = models.IntegerField()
-    username = models.CharField(max_length=350, null=True)
-    first_name = models.CharField(max_length=350)
-    last_name = models.CharField(max_length=350)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["bot", "individual_id"], name="unique_bot_individuals"
-            )
-        ]
+    id = models.IntegerField(primary_key=True)
+    username = models.TextField(null=True)
+    first_name = models.TextField()
+    last_name = models.TextField(null=True)
+    bots = models.ManyToManyField(Bot, through="BotIndividual")
 
     def __str__(self):
-        return f"{self.individual_id} - {self.first_name}"
+        return f"{self.id} - {self.first_name}"
+
+
+class BotIndividual(models.Model):
+    bot = models.ForeignKey(
+        Bot, related_name="bot_individuals", on_delete=models.CASCADE
+    )
+    individual = models.ForeignKey(Individual, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return (
+            f"individual_id: {self.individual.id} - bot_username: {self.bot.username}"
+        )
