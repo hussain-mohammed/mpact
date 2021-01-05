@@ -10,7 +10,8 @@ from telethon.tl import types
 
 from constants import BOT_TOKEN, TELEGRAM_API_HASH, TELEGRAM_API_ID
 from logger import logger
-from mpact.models import Bot, Chat, Individual
+from messages import WELCOME
+from mpact.models import Bot, BotIndividual, Chat, ChatBot, Individual
 from mpact.serializers import ChatSerializer
 from utils import get_or_none
 
@@ -32,23 +33,24 @@ async def msg_handler(event):
                 user_details = await bot_client.get_entity(
                     event.message.peer_id.user_id
                 )
-                bots = Bot.objects.filter(bot_id=current_bot.id)
 
-                for bot in bots:
-                    group_id = bot.chat.chat_id
-                    # fetching all the users of a group
-                    users = await bot_client.get_participants(group_id)
-                    for user in users:
-                        # checking if the user is part of any group
-                        if user.first_name == user_details.first_name:
-                            Individual.objects.get_or_create(
-                                bot=bot,
-                                individual_id=user_details.id,
-                                username=user_details.username,
-                                first_name=user_details.first_name,
-                                last_name=user_details.last_name,
-                            )
-                await event.reply("Welcome! How may i help you?")
+                bot = Bot.objects.get(id=current_bot.id)
+
+                individual, i_created = Individual.objects.get_or_create(
+                    id=user_details.id,
+                    defaults={
+                        "username": user_details.username,
+                        "first_name": user_details.first_name,
+                        "last_name": user_details.last_name,
+                    },
+                )
+                bot_individual, bi_created = BotIndividual.objects.get_or_create(
+                    bot=bot, individual=individual
+                )
+                if bi_created:
+                    bot_individual.save()
+
+                await event.reply(WELCOME)
 
     except Exception as exception:
         logger.exception(exception)
@@ -62,7 +64,7 @@ async def chat_handler(event):
     try:
         if event.created:
             data = {
-                "chat_id": event.action_message.peer_id.chat_id,
+                "id": event.action_message.peer_id.chat_id,
                 "title": event.new_title,
                 "created_at": event.action_message.date,
             }
@@ -76,17 +78,19 @@ async def chat_handler(event):
 
                 if user_details.username == current_bot.username:
                     # add bot details in the database
-                    bot = Bot.objects.create(
-                        chat=chat,
-                        bot_id=user_details.id,
-                        username=user_details.username,
-                        first_name=user_details.first_name,
-                        last_name=user_details.last_name,
+                    bot, created = Bot.objects.get_or_create(
+                        id=user_details.id,
+                        defaults={
+                            "username": user_details.username,
+                            "first_name": user_details.first_name,
+                            "last_name": user_details.last_name,
+                        },
                     )
-                    bot.save()
+                    chat_bot = ChatBot.objects.create(chat=chat, bot=bot)
+                    chat_bot.save()
 
         elif event.new_title:
-            chat = get_or_none(Chat, chat_id=event.action_message.peer_id.chat_id)
+            chat = get_or_none(Chat, id=event.action_message.peer_id.chat_id)
             if chat:
                 chat.title = event.new_title
                 chat.save()
