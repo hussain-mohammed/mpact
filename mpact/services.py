@@ -18,11 +18,11 @@ from constants import (
 from django.contrib.auth.models import User
 from logger import logger
 from rest_framework import status
-from telethon import TelegramClient, functions
+from telethon import TelegramClient
 from utils import get_or_none
 
-from .models import Chat
-from .serializers import ChatSerializer
+from .models import ChatBot
+from .serializers import ChatBotSerializer
 
 
 @asynccontextmanager
@@ -100,8 +100,8 @@ async def get_dialog():
     """
     async with get_anon_client() as client:
         if await client.is_user_authorized():
-            chats = Chat.objects.all()
-            chats_serializer = ChatSerializer(chats, many=True)
+            chats = ChatBot.objects.all()
+            chats_serializer = ChatBotSerializer(chats, many=True)
             return {
                 DATA: {"dialogs": chats_serializer.data, IS_SUCCESS: True},
                 STATUS: status.HTTP_200_OK,

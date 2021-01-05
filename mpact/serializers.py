@@ -1,25 +1,40 @@
 from rest_framework import serializers
 
-from .models import Bot, Chat, Individual
+from .models import Bot, BotIndividual, Chat, ChatBot, Individual
 
 
 class IndividualSerializer(serializers.ModelSerializer):
     class Meta:
         model = Individual
-        fields = ["individual_id", "username", "first_name", "last_name"]
+        fields = ["id", "username", "first_name", "last_name"]
+
+
+class BotIndividualSerializer(serializers.ModelSerializer):
+    individual = IndividualSerializer(required=True, many=False)
+
+    class Meta:
+        model = BotIndividual
+        fields = ["individual"]
 
 
 class BotSerializer(serializers.ModelSerializer):
-    individuals = IndividualSerializer(many=True, required=True)
+    bot_individuals = BotIndividualSerializer(required=True, many=True)
 
     class Meta:
         model = Bot
-        fields = ["username", "individuals"]
+        fields = ["id", "username", "bot_individuals"]
 
 
 class ChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chat
+        fields = ["id", "title"]
+
+
+class ChatBotSerializer(serializers.ModelSerializer):
+    chat = ChatSerializer(read_only=True)
     bot = BotSerializer(read_only=True)
 
     class Meta:
-        model = Chat
-        fields = ["chat_id", "title", "bot"]
+        model = ChatBot
+        fields = "__all__"
