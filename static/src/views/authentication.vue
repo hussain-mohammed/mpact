@@ -138,6 +138,7 @@ export default {
             const { is_2FA_enabled = false } = data.data;
             this.showOtpPage = this.showLoginPage = false;
             this.show2FaPage = true;
+            localStorage.setItem("username", data.data.first_name || "");
             !is_2FA_enabled ? this.$router.push("/chat") : "";
           }
         } catch (e) {
