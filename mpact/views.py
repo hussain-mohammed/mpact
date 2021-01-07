@@ -1,12 +1,17 @@
 import asyncio
 
+from constants import DATA, STATUS
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.response import Response
 
-from .constants import DATA, STATUS
-from .services import get_dialog, login, logout, send_msg
-from constants import DATA, STATUS
+from .services import (
+    get_chat_msg,
+    get_dialog,
+    get_individual_msg,
+    login,
+    logout,
+    send_msg,
+)
 
 
 def new_or_current_event_loop():
@@ -48,6 +53,32 @@ class SendMessage(APIView):
     def post(self, request):
         data = request.data
         result = new_or_current_event_loop().run_until_complete(send_msg(data))
+        return Response(result[DATA], status=result[STATUS])
+
+
+class GetIndividaulMessage(APIView):
+    """
+    returns the individual messages.
+    """
+
+    def get(self, request, individual_id):
+        result = new_or_current_event_loop().run_until_complete(
+            get_individual_msg(individual_id)
+        )
+        return Response(result[DATA], status=result[STATUS])
+
+
+class GetChatMessage(APIView):
+    """
+    returns the chat messages.
+    """
+
+    def get(self, request, chat_id):
+        limit = request.GET.get("limit")
+        offset = request.GET.get("offset")
+        result = new_or_current_event_loop().run_until_complete(
+            get_chat_msg(chat_id, limit, offset)
+        )
         return Response(result[DATA], status=result[STATUS])
 
 

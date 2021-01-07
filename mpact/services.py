@@ -6,6 +6,7 @@ from constants import (
     CODE,
     DATA,
     FIRST_NAME,
+    INDIVIDUAL,
     INVALID_CODE,
     IS_SUCCESS,
     LAST_NAME,
@@ -35,8 +36,8 @@ from telethon.errors import (
 )
 from utils import get_or_none
 
-from .models import ChatBot
-from .serializers import ChatBotSerializer
+from .models import ChatBot, Message
+from .serializers import ChatBotSerializer, MessageSerializer
 
 
 @asynccontextmanager
@@ -159,7 +160,13 @@ async def send_msg(data):
     async with get_anon_client() as client:
         if await client.is_user_authorized():
             async with await start_bot_client() as bot:
-                await bot.send_message(data[CHAT_ID], data[MESSAGE])
+                current_bot = await bot.get_me()
+                data["sender"] = current_bot.id
+                serializer = MessageSerializer(data=data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                await bot.send_message(data[INDIVIDUAL], data[MESSAGE])
+
             return {
                 DATA: {MESSAGE: MESSAGE_SENT},
                 STATUS: status.HTTP_200_OK,
@@ -181,3 +188,54 @@ async def get_dialog():
                 STATUS: status.HTTP_200_OK,
             }
         return NOT_AUTHORIZED
+
+
+async def get_individual_msg(individual_id):
+    """
+    Returns private chat messages if the user is authorized
+    """
+    async with get_anon_client() as client:
+        if await client.is_user_authorized():
+            data = Message.objects.filter(individual=individual_id).order_by("-date")
+            serializer = MessageSerializer(data, many=True)
+            return {
+                DATA: {"messages": serializer.data, IS_SUCCESS: True},
+                STATUS: status.HTTP_200_OK,
+            }
+        return NOT_AUTHORIZED
+
+
+async def get_chat_msg(chat_id, limit, offset):
+    """
+    Returns group chat messages if the user is authorized
+    """
+    async with get_anon_client() as client:
+        if await client.is_user_authorized():
+            await client.get_dialogs()
+            msgs = []
+            if limit and offset:
+                async for message in client.iter_messages(
+                    chat_id, limit=int(limit), offset_id=int(offset)
+                ):
+                    extract_messages(message, msgs)
+            elif limit:
+                async for message in client.iter_messages(chat_id, limit=int(limit)):
+                    extract_messages(message, msgs)
+            else:
+                async for message in client.iter_messages(chat_id):
+                    extract_messages(message, msgs)
+
+            return {
+                DATA: {"messages": msgs, IS_SUCCESS: True},
+                STATUS: status.HTTP_200_OK,
+            }
+        return NOT_AUTHORIZED
+
+
+def extract_messages(message, msgs):
+    msg = {}
+    msg["id"] = message.id
+    msg["sender"] = message.sender.first_name
+    msg[MESSAGE] = message.text
+    msg["date"] = message.date
+    msgs.append(msg)

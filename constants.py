@@ -20,6 +20,7 @@ LAST_NAME = "last_name"
 USERNAME = "username"
 TWO_FA_ENABLED = "is_2FA_enabled"
 IS_SUCCESS = "is_success"
+INDIVIDUAL = "individual"
 
 # Environment Variables
 TELEGRAM_API_ID = os.environ["TELEGRAM_API_ID"]
