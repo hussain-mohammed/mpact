@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 
 
 def validate_phone(username):
@@ -68,3 +69,13 @@ class BotIndividual(models.Model):
         return (
             f"individual_id: {self.individual.id} - bot_username: {self.bot.username}"
         )
+
+
+class Message(models.Model):
+    individual = models.ForeignKey(Individual, on_delete=models.CASCADE)
+    sender = models.IntegerField()
+    message = models.TextField(null=True)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.individual.first_name} - {self.sender}"
