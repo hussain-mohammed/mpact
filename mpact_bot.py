@@ -11,7 +11,7 @@ from telethon.tl import types
 from constants import BOT_TOKEN, TELEGRAM_API_HASH, TELEGRAM_API_ID
 from logger import logger
 from messages import WELCOME
-from mpact.models import Bot, BotIndividual, Chat, ChatBot, Individual
+from mpact.models import Bot, BotIndividual, Chat, ChatBot, Individual, Message
 from mpact.serializers import ChatSerializer
 from utils import get_or_none
 
@@ -26,10 +26,10 @@ async def msg_handler(event):
     Event handler for new message
     """
     try:
-        if event.message.message == "/start":
-            # check if the message is from individual(PeerUser) or group(PeerChat) chat
-            if isinstance(event.message.peer_id, types.PeerUser):
-                current_bot = await bot_client.get_me()
+        # check if the message is from individual(PeerUser) or group(PeerChat) chat
+        if isinstance(event.message.peer_id, types.PeerUser):
+            current_bot = await bot_client.get_me()
+            if event.message.message == "/start":
                 user_details = await bot_client.get_entity(
                     event.message.peer_id.user_id
                 )
@@ -51,6 +51,24 @@ async def msg_handler(event):
                     bot_individual.save()
 
                 await event.reply(WELCOME)
+
+            elif event.message.message:
+                individual_chat = Individual.objects.get(
+                    id=event.message.peer_id.user_id
+                )
+                ind_msg_obj = Message.objects.create(
+                    individual=individual_chat,
+                    sender=individual_chat.id,
+                    message=event.text,
+                )
+
+                # responding back to the user
+                await event.respond(event.text)
+                bot_msg_obj = Message.objects.create(
+                    individual=individual_chat,
+                    sender=current_bot.id,
+                    message=event.text,
+                )
 
     except Exception as exception:
         logger.exception(exception)
