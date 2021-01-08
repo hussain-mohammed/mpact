@@ -25,7 +25,10 @@
         <div
           class="position-absolute mx-auto left-right-0 w-100 d-grid justify-content-center login-top"
         >
-          <Login v-if="showLoginPage">
+          <Login
+            v-if="showLoginPage"
+            @moveToNextPage="nextButtonValidation && moveToNextPage()"
+          >
             <vue-tel-input
               v-model="phoneNumber"
               v-bind="telephoneProps"
@@ -68,7 +71,7 @@
     </div>
   </div>
 </template>
- <script>
+<script>
 const Login = () => import("../components/login.vue");
 const Info = () => import("../components/telegramInfo.vue");
 const Otp = () => import("../components/otp.vue");
@@ -115,7 +118,7 @@ export default {
           if (data && data.data && data.data.is_success) {
             this.phoneCodeHash = data.data.phone_code_hash;
             this.toastInput = "OTP is sent to registered number";
-            this.showLoginPage = this.show2FaPage = false;
+            this.showLoginPage = this.show2FaPage = this.nextButtonValidation = false;
             this.showOtpPage = true;
             this.showNotification();
           }
@@ -136,7 +139,7 @@ export default {
           });
           if (data && data.data && data.data.is_success) {
             const { is_2FA_enabled = false } = data.data;
-            this.showOtpPage = this.showLoginPage = false;
+            this.showOtpPage = this.showLoginPage = this.nextButtonValidation = false;
             this.show2FaPage = true;
             localStorage.setItem("username", data.data.first_name || "");
             !is_2FA_enabled ? this.$router.push("/chat") : "";
@@ -156,6 +159,8 @@ export default {
             password: this.TwoFactorAuthCode,
           });
           if (data && data.data && data.data.is_success) {
+            localStorage.removeItem("username");
+            localStorage.setItem("username", data.data.first_name || "");
             this.$router.push("/chat");
           }
         } catch (e) {
@@ -170,12 +175,18 @@ export default {
       this.formattedPhoneNumber = obj.number.e164;
     },
     validateOTP(obj) {
-      this.nextButtonValidation = obj.toString().length >= 5;
-      this.otpNumber = obj.toString();
+      this.nextButtonValidation = obj.target.value.toString().length >= 5;
+      this.otpNumber = obj.target.value.toString();
+      obj.keyCode == 13 && this.nextButtonValidation
+        ? this.moveToNextPage()
+        : "";
     },
     validate2FaText(obj) {
-      this.nextButtonValidation = obj.toString().length >= 5;
-      this.TwoFactorAuthCode = obj.toString();
+      this.nextButtonValidation = obj.target.value.toString().length >= 5;
+      this.TwoFactorAuthCode = obj.target.value.toString();
+      obj.keyCode == 13 && this.nextButtonValidation
+        ? this.moveToNextPage()
+        : "";
     },
     showNotification() {
       $(".toast").toast("show");

@@ -1,9 +1,10 @@
 <template>
   <div class="side-nav h-100">
     <div
-      class="h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center"
+      class="h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center d-flex justify-content-around"
     >
-      <span class="text-truncate">{{ userName }}</span>
+      <div class="text-truncate username text-left">{{ userName }}</div>
+      <div class="logout h-100" @click="logout()" title="logout"></div>
     </div>
     <div class="chat-contacts">
       <div
@@ -41,6 +42,17 @@ export default {
     return {
       data: {},
     };
+  },
+  methods: {
+    async logout() {
+      try {
+        await this.$http.get("/logout");
+        localStorage.removeItem("username");
+        this.$router.push("/login");
+      } catch (e) {
+        console.log(e);
+      }
+    },
   },
 };
 </script>
@@ -80,5 +92,18 @@ export default {
 
 [aria-expanded="true"] .fa:before {
   content: "-";
+}
+
+.username {
+  width: 85%;
+}
+
+.logout {
+  width: 15%;
+  background-size: 20px 20px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url("../assets/logout.svg");
+  cursor: pointer;
 }
 </style>
