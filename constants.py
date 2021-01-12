@@ -21,11 +21,14 @@ USERNAME = "username"
 TWO_FA_ENABLED = "is_2FA_enabled"
 IS_SUCCESS = "is_success"
 INDIVIDUAL = "individual"
+TOKEN = "token"
 
 # Environment Variables
 TELEGRAM_API_ID = os.environ["TELEGRAM_API_ID"]
 TELEGRAM_API_HASH = os.environ["TELEGRAM_API_HASH"]
 BOT_TOKEN = os.environ["BOT_TOKEN"]
+SECURED_URL_SECRET_KEY = os.environ.get("SECURED_URL_SECRET_KEY")
+SECURITY_PASSWORD_SALT = os.environ.get("SECURITY_PASSWORD_SALT")
 
 
 # Responses

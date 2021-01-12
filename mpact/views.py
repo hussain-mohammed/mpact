@@ -3,6 +3,7 @@ import asyncio
 from constants import DATA, STATUS
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from utils import token_required
 
 from .services import (
     get_chat_msg,
@@ -40,8 +41,9 @@ class Logout(APIView):
     It is used to log out from telegram.
     """
 
-    def get(self, request):
-        result = new_or_current_event_loop().run_until_complete(logout())
+    @token_required
+    def get(self, request, phone):
+        result = new_or_current_event_loop().run_until_complete(logout(phone))
         return Response(result[DATA], status=result[STATUS])
 
 
@@ -50,9 +52,10 @@ class SendMessage(APIView):
     This is a sample api to send a message.
     """
 
-    def post(self, request):
+    @token_required
+    def post(self, request, phone):
         data = request.data
-        result = new_or_current_event_loop().run_until_complete(send_msg(data))
+        result = new_or_current_event_loop().run_until_complete(send_msg(phone, data))
         return Response(result[DATA], status=result[STATUS])
 
 
@@ -61,9 +64,10 @@ class GetIndividaulMessage(APIView):
     returns the individual messages.
     """
 
-    def get(self, request, individual_id):
+    @token_required
+    def get(self, request, phone, individual_id):
         result = new_or_current_event_loop().run_until_complete(
-            get_individual_msg(individual_id)
+            get_individual_msg(phone, individual_id)
         )
         return Response(result[DATA], status=result[STATUS])
 
@@ -73,11 +77,12 @@ class GetChatMessage(APIView):
     returns the chat messages.
     """
 
-    def get(self, request, chat_id):
+    @token_required
+    def get(self, request, phone, chat_id):
         limit = request.GET.get("limit")
         offset = request.GET.get("offset")
         result = new_or_current_event_loop().run_until_complete(
-            get_chat_msg(chat_id, limit, offset)
+            get_chat_msg(phone, chat_id, limit, offset)
         )
         return Response(result[DATA], status=result[STATUS])
 
@@ -87,6 +92,7 @@ class Dialog(APIView):
     It is used to retrive dialogs(open conversations)
     """
 
-    def get(self, request):
-        result = new_or_current_event_loop().run_until_complete(get_dialog())
+    @token_required
+    def get(self, request, phone):
+        result = new_or_current_event_loop().run_until_complete(get_dialog(phone))
         return Response(result[DATA], status=result[STATUS])

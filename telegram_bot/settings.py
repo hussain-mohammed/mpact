@@ -120,3 +120,7 @@ if os.environ.get("DEPLOY_ENV") == "dev":
 
 else:
     DATABASES = {"default": dj_database_url.config(conn_max_age=600, ssl_require=True)}
+
+from alchemysession import AlchemySessionContainer
+
+container = AlchemySessionContainer(os.environ["DATABASE_URL"])

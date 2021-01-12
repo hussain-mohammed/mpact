@@ -20,7 +20,7 @@ bot_client = TelegramClient("bot", TELEGRAM_API_ID, TELEGRAM_API_HASH).start(
 )
 
 
-@bot_client.on(events.NewMessage)
+@bot_client.on(events.NewMessage(incoming=True))
 async def msg_handler(event):
     """
     Event handler for new message
