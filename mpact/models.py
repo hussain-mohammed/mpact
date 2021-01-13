@@ -53,6 +53,7 @@ class Individual(models.Model):
     username = models.TextField(null=True)
     first_name = models.TextField()
     last_name = models.TextField(null=True)
+    access_hash = models.TextField()
     bots = models.ManyToManyField(Bot, through="BotIndividual")
 
     def __str__(self):

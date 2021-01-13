@@ -35,9 +35,10 @@ from telethon.errors import (
     PhoneCodeInvalidError,
     SessionPasswordNeededError,
 )
+from telethon.tl.types import InputPeerUser
 from utils import encode_token, get_or_none
 
-from .models import ChatBot, Message
+from .models import ChatBot, Individual, Message
 from .serializers import ChatBotSerializer, MessageSerializer
 
 
@@ -165,9 +166,15 @@ async def send_msg(phone, data):
                 current_bot = await bot.get_me()
                 data["sender"] = current_bot.id
                 serializer = MessageSerializer(data=data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                await bot.send_message(data[INDIVIDUAL], data[MESSAGE])
+                if serializer.is_valid():
+                    serializer.save()
+                    access_hash = Individual.objects.get(
+                        id=data[INDIVIDUAL]
+                    ).access_hash
+                    receiver = InputPeerUser(int(data[INDIVIDUAL]), int(access_hash))
+                else:
+                    receiver = await client.get_entity(int(data[INDIVIDUAL]))
+                await bot.send_message(receiver, data[MESSAGE])
 
             return {
                 DATA: {MESSAGE: MESSAGE_SENT},
