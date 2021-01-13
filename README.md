@@ -25,7 +25,7 @@ A Telegram-based expert support system
     $ export TELEGRAM_API_HASH=<Telegram API Hash>
     $ export ALLOWED_HOSTS='127.0.0.1 localhost'
     $ export SECURED_URL_SECRET_KEY="1234"
-    $ export SECURITY_PASSWORD_SALT="1234
+    $ export SECURITY_PASSWORD_SALT="1234"
 
 ## Run
 

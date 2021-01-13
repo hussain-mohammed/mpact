@@ -42,7 +42,7 @@ from .serializers import ChatBotSerializer, MessageSerializer
 
 
 @asynccontextmanager
-async def get_anon_client(phone):
+async def client_context(phone):
     """
     TelegramClient is already an async context manager. This context
     manager connect to the telegram and logs exceptions.
@@ -78,7 +78,7 @@ async def login(data):
         NOT_AUTHORIZED[DATA][MESSAGE] = PHONE_NOT_REGISTERED
         return NOT_AUTHORIZED
 
-    async with get_anon_client(data[PHONE]) as client:
+    async with client_context(data[PHONE]) as client:
         if PASSWORD in data:
             return await two_factor_auth(client, data)
         elif CODE in data:
@@ -100,6 +100,10 @@ async def two_factor_auth(client, data):
         password=data[PASSWORD],
     )
     await client.disconnect()
+    return ok_response(user_details, data)
+
+
+def ok_response(user_details, data):
     return {
         DATA: {
             FIRST_NAME: user_details.first_name,
@@ -138,24 +142,11 @@ async def validate_code(client, data):
             STATUS: status.HTTP_400_BAD_REQUEST,
         }
     await client.disconnect()
-    return {
-        DATA: {
-            FIRST_NAME: user_details.first_name,
-            TOKEN: encode_token(
-                {
-                    LAST_NAME: user_details.last_name,
-                    USERNAME: user_details.username,
-                    PHONE: data[PHONE],
-                }
-            ),
-            IS_SUCCESS: True,
-        },
-        STATUS: status.HTTP_200_OK,
-    }
+    return ok_response(user_details, data)
 
 
 async def logout(phone):
-    async with get_anon_client(phone) as client:
+    async with client_context(phone) as client:
         if await client.is_user_authorized():
             await client.log_out()
     return {
@@ -168,7 +159,7 @@ async def send_msg(phone, data):
     """
     Sends the message to the particular chat
     """
-    async with get_anon_client(phone) as client:
+    async with client_context(phone) as client:
         if await client.is_user_authorized():
             async with await start_bot_client() as bot:
                 current_bot = await bot.get_me()
@@ -190,7 +181,7 @@ async def get_dialog(phone):
     """
     Returns dialogs if the user is authorized
     """
-    async with get_anon_client(phone) as client:
+    async with client_context(phone) as client:
         if await client.is_user_authorized():
             chats = ChatBot.objects.all()
             chats_serializer = ChatBotSerializer(chats, many=True)
@@ -205,7 +196,7 @@ async def get_individual_msg(phone, individual_id):
     """
     Returns private chat messages if the user is authorized
     """
-    async with get_anon_client(phone) as client:
+    async with client_context(phone) as client:
         if await client.is_user_authorized():
             data = Message.objects.filter(individual=individual_id).order_by("-date")
             serializer = MessageSerializer(data, many=True)
@@ -220,7 +211,7 @@ async def get_chat_msg(phone, chat_id, limit, offset):
     """
     Returns group chat messages if the user is authorized
     """
-    async with get_anon_client(phone) as client:
+    async with client_context(phone) as client:
         if await client.is_user_authorized():
             await client.get_dialogs()
             msgs = []
