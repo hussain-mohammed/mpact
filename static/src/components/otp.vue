@@ -15,7 +15,7 @@
       type="text"
       placeholder="Enter your code"
       class="d-flex justify-content-center text-center input custom-input border-0 mx-auto"
-      @keyup="$emit('reciveOtpText', $event)"
+      @keyup="$emit('receiveOtpText', $event)"
     />
   </div>
 </template>

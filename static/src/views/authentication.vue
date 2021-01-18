@@ -41,12 +41,12 @@
               showOtpPage = !showOtpPage;
               showLoginPage = !showLoginPage;
             "
-            @reciveOtpText="validateOTP($event)"
+            @receiveOtpText="validateOTP($event)"
             :phone="phoneNumber"
           />
           <TwoFactorAuth
             v-if="show2FaPage"
-            @recive2FaText="validate2FaText($event)"
+            @receive2FaText="validate2FaText($event)"
           />
           <div class="login-footer width-404 text-center" v-show="!isInfoHide">
             <div class="footer-1">
