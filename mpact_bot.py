@@ -42,6 +42,7 @@ async def msg_handler(event):
                         "username": user_details.username,
                         "first_name": user_details.first_name,
                         "last_name": user_details.last_name,
+                        "access_hash": user_details.access_hash,
                     },
                 )
                 bot_individual, bi_created = BotIndividual.objects.get_or_create(
