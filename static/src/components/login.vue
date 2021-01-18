@@ -1,6 +1,6 @@
 <template>
   <div class="login-body width-404 bg-white border-0">
-    <form>
+    <form @submit.prevent="$emit('moveToNextPage')">
       <h3 class="login-title">Sign in</h3>
       <p class="country-selection">
         Please choose your country and enter your full phone number.

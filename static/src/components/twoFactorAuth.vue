@@ -1,6 +1,6 @@
 <template>
   <div class="f2a-body width-404 bg-white border-0">
-    <form>
+    <form @submit.prevent="">
       <h3 class="f2a-title">Password</h3>
       <p class="country-selection text-center">
         You have enabled two-step verification, so your account is protected
@@ -10,19 +10,13 @@
         type="password"
         placeholder="Enter your code"
         class="d-flex justify-content-center text-center input custom-input border-0 mx-auto"
-        @keyup="read2FaText($event)"
+        @keyup="$emit('receive2FaText', $event)"
       />
     </form>
   </div>
 </template>
 <script>
-export default {
-    methods:{
-        read2FaText(obj){
-            this.$emit('recive2FaText',obj.target.value);
-        }
-    }
-};
+export default {};
 </script>
 
 <style scoped>
@@ -53,7 +47,7 @@ export default {
   max-width: none;
 }
 
-.f2a-body .custom-input{
-    border-bottom: 1px solid #000  !important;
+.f2a-body .custom-input {
+  border-bottom: 1px solid #000 !important;
 }
 </style>
