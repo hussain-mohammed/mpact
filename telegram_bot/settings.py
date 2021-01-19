@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -124,3 +125,6 @@ else:
 from alchemysession import AlchemySessionContainer
 
 container = AlchemySessionContainer(os.environ["DATABASE_URL"])
+
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_BEAT_SCHEDULE = {}

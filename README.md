@@ -29,7 +29,17 @@ A Telegram-based expert support system
 
 ## Run
 
-    $ ./manage.py runserver
+1. Redis server
+
+        $ redis-server
+
+2. Celery
+
+        $  celery -A telegram_bot beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+3. Django server
+
+        $ ./manage.py runserver
 
 ## There is a script for that
 
@@ -57,6 +67,8 @@ Now you can run a development server with
 
     $ npm install
     $ npm run dev
+    $ redis-server
+    $ celery -A telegram_bot beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     $ ./manage-dev runserver
 
 Create a super user with the below command
