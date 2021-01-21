@@ -7,8 +7,7 @@
       </div>
       <div class='col-10 p-0'>
         <chat-window :currentUserId='currentUserId' :rooms='rooms' :messages='messages' :single-room='hideSideNav'
-          @send-message='sendMessages($event)' @fetch-messages='loadOldMessages($event)' height='100vh'
-          class='chat-widget-1' :messages-loaded='messagesLoaded' />
+          @send-message='sendMessages($event)' height='100vh' class='chat-widget-1' :messages-loaded='messagesLoaded' />
       </div>
     </div>
   </div>
@@ -83,17 +82,25 @@
             roomId,
             skip,
             limit,
-          })
+          });
+          this.currentUserId = roomId;
           this.skip = this.skip + this.limit;
-          const newMessages = data.data.messages.map((message, i) => ({
+          const newMessages = data.data.messages.map((d, i) => ({
             _id: Math.random() * 1000,
-            content: message.message || '',
-            sender_id: message.individual || '',
-            date: this.dateConversion(message.date),
-            timestamp: this.timeConversion(message.date),
-            username: message.sender
+            content: d.message || '',
+            sender_id: (roomId === d.sender ? d.sender : d.individual),
+            date: this.convertDate(d.date),
+            timestamp: this.convertTime(d.date),
           }));
+          const rooms = [];
+          rooms.push({
+            roomId,
+            roomName,
+            users: [],
+          });
           this.messages = [...newMessages, ...this.messages];
+          this.rooms = rooms;
+          this.messagesLoaded = true;
         } catch (err) {
           console.error(err);
         }
@@ -119,17 +126,19 @@
             const requireRoomStructure = [];
             this.currentUserId = roomId;
             data.data.messages.map((d, i) => {
+              if (d.individual != d.sender) {
+                this.currentUserId = d.sender
+              }
               requireMessageStructure.push({
                 _id: Math.random() * 1000,
                 content: d.message || '',
-                sender_id: d.individual || '',
-                date: this.dateConversion(d.date),
-                timestamp: this.timeConversion(d.date),
-                username: d.sender,
+                sender_id: d.sender,
+                date: this.convertDate(d.date),
+                timestamp: this.convertTime(d.date),
               });
             });
             requireRoomStructure.push({
-              roomId: roomId,
+              roomId,
               roomName,
               users: [],
             });
@@ -146,7 +155,7 @@
         roomId
       }) {
         try {
-           const data = await MessageService.fetchGroupMessages({
+          const data = await MessageService.fetchGroupMessages({
             roomId,
           })
           if (data && data.data.is_success) {
@@ -165,8 +174,8 @@
                 _id: d.id || '',
                 content: d.message || '',
                 sender_id: d.sender || '',
-                date: this.dateConversion(d.date),
-                timestamp: this.timeConversion(d.date),
+                date: this.convertDate(d.date),
+                timestamp: this.convertTime(d.date),
                 username: this.roomName,
               });
             });
@@ -190,20 +199,24 @@
         replyMessage
       }) {
         try {
-           const data = await MessageService.addNewMessage({
+          const data = await MessageService.addNewMessage({
             roomId,
             content,
-          })
-          this.messagesLoaded = false;
-          this.messages.push({
-            _id: Math.random(),
-            content,
-            sender_id: roomId,
-            date: this.dateConversion(new Date()),
-            timestamp: this.timeConversion(new Date()),
-            username: this.sender,
           });
-          this.messagesLoaded = true;
+          if (data && data.status === 200) {
+            this.messagesLoaded = false;
+            const newMessages = [...this.messages, {
+              _id: Math.random().toString(32).slice(2),
+              individual: roomId,
+              content,
+              sender_id: this.currentUserId,
+              date: this.convertDate(new Date()),
+              timestamp: this.convertTime(new Date()),
+              username: this.sender,
+            }];
+            this.messages = newMessages;
+            this.messagesLoaded = true;
+          }
         } catch (err) {
           console.error(err);
         }
@@ -213,7 +226,7 @@
         this.messages.length = 0;
         this.messagesLoaded = false;
       },
-      dateConversion(date) {
+      convertDate(date) {
         const dateString = new Date(date);
         let month = '' + (dateString.getMonth() + 1),
           day = '' + dateString.getDate(),
@@ -222,7 +235,7 @@
         if (day.length < 2) day = '0' + day;
         return [day, month, year].join('-');
       },
-      timeConversion(time) {
+      convertTime(time) {
         const timeString = new Date(time);
         return `${timeString.getHours()}:${timeString.getMinutes()}`;
       },

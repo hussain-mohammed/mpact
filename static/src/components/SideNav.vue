@@ -8,13 +8,14 @@
     <div class='chat-contacts'>
       <div class='side-nav-row mt-2' v-for='(mainObj, index) in contactsList' :key='index'>
         <button type='button'
-          class='btn border-0 w-100 bg-telegram-primary border-0 rounded-0 mb-1 text-white d-flex justify-content-between'
+          class='btn border-0 w-100 bg-telegram-primary border-0 rounded-0 text-white d-flex justify-content-between'
           data-toggle='collapse' :data-target="'#demo-' + index"
           @click="$emit('getGroupMessages', { roomName: mainObj.chat.title, roomId: mainObj.chat.id })">
           <span>{{ mainObj.chat.title }}</span><i class='fa'></i>
         </button>
-        <div class='collapse border-0 pl-5 pt-3 bg-white cursor__pointer' :id="'demo-' + index">
-          <div v-for='(subObj, index) in mainObj.bot.bot_individuals' :key='index' class='text-telegram-primary'
+        <div class='collapse border-0 bg-white cursor__pointer' :id="'demo-' + index">
+          <div v-for='(subObj, index) in mainObj.bot.bot_individuals' :key='index'
+            class='text-telegram-primary pt-2 pb-1 pl-5'
             @click="$emit('getIndividualMessages', { roomName: subObj.individual.first_name, roomId :subObj.individual.id } )">
             {{ subObj.individual.first_name }}
           </div>
