@@ -3,22 +3,37 @@ import Router from 'vue-router';
 
 Vue.use(Router)
 
-export default new Router({
-  mode: "history",
-  routes: [
-    {
+const router = new Router({
+  mode: 'history',
+  routes: [{
       path: '',
-      redirect: "/login",
+      redirect: '/login',
     },
     {
       path: '/login',
       name: 'Auth',
-      component: () => import('../views/authentication.vue')
+      component: () => import('../views/Authentication.vue')
     },
     {
       path: '/chat',
       name: 'chat',
-      component: () => import('../views/chat.vue')
+      component: () => import('../views/Chat.vue'),
+      meta: {
+        auth: true
+      }
     }
   ]
 })
+
+const token = localStorage.getItem('Token');
+router.beforeEach((to, from, next) => {
+  if (to.name == 'login') {
+    next();
+  } else if (to.meta.auth && token) {
+    next()
+  } else {
+    next();
+  }
+});
+
+export default router;

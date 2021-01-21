@@ -1,15 +1,14 @@
 import Vue from 'vue';
+import VueTelInput from 'vue-tel-input';
 import App from './App.vue';
+import Api from './src/services/Api'
 import router from './src/router/index';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { axios } from './src/services/axios'
-import VueTelInput from 'vue-tel-input';
-
 
 Vue.use(VueTelInput);
 
-Vue.prototype.$http = axios;
+Vue.prototype.$http = Api;
 
 new Vue({
   el: '#app',

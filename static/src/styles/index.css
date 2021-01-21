@@ -10,35 +10,39 @@
     margin: 0;
 }
 
-.width-404{
+.width-404 {
     width: 404px;
 }
 
-.left-right-0{
+.left-right-0 {
     left: 0px;
     right: 0px;
 }
 
-.d-grid{
+.d-grid {
     display: grid;
 }
 
-.d-flex{
+.d-flex {
     display: flex;
 }
 
-.cursor-pointer{
+.cursor-pointer {
     cursor: pointer;
 }
 
-.bg-telegram-primary{
+.bg-telegram-primary {
     background: var(--telegram-primary) !important;
 }
 
-.text-telegram-primary{
+.text-telegram-primary {
     color: var(--telegram-primary) !important;
 }
 
-.z-index-25{
+.cursor__pointer {
+    cursor: pointer;
+}
+
+.z-index-25 {
     z-index: 25;
 }
