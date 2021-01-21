@@ -205,7 +205,7 @@ async def get_individual_msg(phone, individual_id):
     """
     async with client_context(phone) as client:
         if await client.is_user_authorized():
-            data = Message.objects.filter(individual=individual_id).order_by("-date")
+            data = Message.objects.filter(individual=individual_id)
             serializer = MessageSerializer(data, many=True)
             return {
                 DATA: {"messages": serializer.data, IS_SUCCESS: True},
@@ -235,16 +235,17 @@ async def get_chat_msg(phone, chat_id, limit, offset):
                     extract_messages(message, msgs)
 
             return {
-                DATA: {"messages": msgs, IS_SUCCESS: True},
+                DATA: {"messages": msgs[::-1], IS_SUCCESS: True},
                 STATUS: status.HTTP_200_OK,
             }
         return NOT_AUTHORIZED
 
 
 def extract_messages(message, msgs):
-    msg = {}
-    msg["id"] = message.id
-    msg["sender"] = message.sender.first_name
-    msg[MESSAGE] = message.text
-    msg["date"] = message.date
-    msgs.append(msg)
+    if message.message:
+        msg = {}
+        msg["id"] = message.id
+        msg["sender"] = message.sender.first_name
+        msg[MESSAGE] = message.text
+        msg["date"] = message.date
+        msgs.append(msg)
