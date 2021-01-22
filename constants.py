@@ -22,6 +22,7 @@ TWO_FA_ENABLED = "is_2FA_enabled"
 IS_SUCCESS = "is_success"
 INDIVIDUAL = "individual"
 TOKEN = "token"
+FLAGGED_MESSAGE = "flagged_message"
 
 # Environment Variables
 TELEGRAM_API_ID = os.environ["TELEGRAM_API_ID"]
@@ -36,3 +37,7 @@ NOT_AUTHORIZED = {
     DATA: {MESSAGE: "Not authorized", IS_SUCCESS: False},
     STATUS: status.HTTP_401_UNAUTHORIZED,
 }
+
+RECORD_NF = "Record not found"
+DELETE_SUCCESS = "Delete successfull"
+DELETE_FAIL = "Delete Fail"
