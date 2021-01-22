@@ -5,13 +5,24 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from utils import token_required
 
-from .services import (
+from mpact.services import (
     get_chat_msg,
     get_dialog,
     get_individual_msg,
     login,
     logout,
     send_msg,
+)
+from rest_framework import status
+from mpact.serializers import FlaggedMessageSerializer
+from mpact.models import FlaggedMessage
+from constants import (
+    IS_SUCCESS,
+    MESSAGE,
+    RECORD_NF,
+    DELETE_SUCCESS,
+    DELETE_FAIL,
+    FLAGGED_MESSAGE,
 )
 
 
@@ -96,3 +107,51 @@ class Dialog(APIView):
     def get(self, request, phone):
         result = new_or_current_event_loop().run_until_complete(get_dialog(phone))
         return Response(result[DATA], status=result[STATUS])
+
+
+class FlagMessage(APIView):
+    @token_required
+    def get(self, request, phone):
+        queryset = FlaggedMessage.objects.all()
+        serializer = FlaggedMessageSerializer(queryset, many=True)
+        return Response(
+            {FLAGGED_MESSAGE: serializer.data, IS_SUCCESS: True},
+            status=status.HTTP_200_OK,
+        )
+
+    @token_required
+    def post(self, request, phone):
+        data = request.data
+        serializer = FlaggedMessageSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {FLAGGED_MESSAGE: serializer.data, IS_SUCCESS: True},
+                status=status.HTTP_201_CREATED,
+            )
+        else:
+            return Response(
+                {MESSAGE: serializer.errors, IS_SUCCESS: False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class FlagMessageDelete(APIView):
+    @token_required
+    def delete(self, request, phone, id):
+        try:
+            flagged_message = FlaggedMessage.objects.get(pk=id)
+        except FlaggedMessage.DoesNotExist:
+            return Response(
+                {MESSAGE: RECORD_NF, IS_SUCCESS: False},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if flagged_message.delete():
+            return Response(
+                {MESSAGE: DELETE_SUCCESS, IS_SUCCESS: True}, status=status.HTTP_200_OK
+            )
+        return Response(
+            {MESSAGE: DELETE_FAIL, IS_SUCCESS: False},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
