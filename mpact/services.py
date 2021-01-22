@@ -243,9 +243,11 @@ async def get_chat_msg(phone, chat_id, limit, offset):
 
 def extract_messages(message, msgs):
     if message.message:
-        msg = {}
-        msg["id"] = message.id
-        msg["sender"] = message.sender.first_name
-        msg[MESSAGE] = message.text
-        msg["date"] = message.date
-        msgs.append(msg)
+        msgs.append(
+            {
+                "id": message.id,
+                "sender": message.sender.first_name,
+                MESSAGE: message.text,
+                "date": message.date,
+            }
+        )
