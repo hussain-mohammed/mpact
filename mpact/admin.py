@@ -57,7 +57,7 @@ class CustomPeriodicForm(PeriodicTaskForm):
     groups = [(chat.id, chat.title) for chat in Chat.objects.all()]
 
     args = ChoiceField(
-        choices=[("chat", groups)] + [("individual", individuals)],
+        choices=[("chat", groups), ("individual", individuals)],
         label="Chat",
         required=False,
     )
