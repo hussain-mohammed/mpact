@@ -40,4 +40,4 @@ NOT_AUTHORIZED = {
 
 RECORD_NF = "Record not found"
 DELETE_SUCCESS = "Delete successfull"
-DELETE_FAIL = "Delete Fail"
+DELETE_FAIL = "Delete fail"
