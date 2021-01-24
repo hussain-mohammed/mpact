@@ -85,8 +85,8 @@ class Message(models.Model):
 class FlaggedMessage(models.Model):
     room_id = models.IntegerField()
     message_id = models.IntegerField()
-    first_name = models.TextField(null=True)
-    message = models.TextField(null=True)
+    first_name = models.TextField()
+    message = models.TextField()
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
