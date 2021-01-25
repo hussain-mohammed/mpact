@@ -1,22 +1,26 @@
 <template>
   <div class='side-nav h-100'>
-    <div
-      class='h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center d-flex justify-content-around'>
+    <div class='h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center d-flex
+    justify-content-around'>
       <div class='text-truncate username text-left'>{{ userName }}</div>
       <div class='logout h-100' @click='logout()' title='logout'></div>
     </div>
     <div class='chat-contacts'>
       <div class='side-nav-row mt-2' v-for='(mainObj, index) in contactsList' :key='index'>
-        <button type='button'
-          class='btn border-0 w-100 bg-telegram-primary border-0 rounded-0 text-white d-flex justify-content-between'
-          data-toggle='collapse' :data-target="'#demo-' + index"
-          @click="$emit('getGroupMessages', { roomName: mainObj.chat.title, roomId: mainObj.chat.id })">
-          <span>{{ mainObj.chat.title }}</span><i class='fa'></i>
-        </button>
+        <div class='w-100 bg-telegram__primary text-white d-flex justify-content-between' data-toggle='collapse'
+          :data-target="'#demo-' + index">
+          <button class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0' type='button' @click="$emit('getGroupMessages',
+            { roomName: mainObj.chat.title, roomId: mainObj.chat.id })">
+            <span class='px-4'>{{ mainObj.chat.title }}</span>
+          </button>
+          <button class='btn expand-icon box-shadow__none border-0 rounded-0' type='button'>
+            <i class='fa'></i>
+          </button>
+        </div>
         <div class='collapse border-0 bg-white cursor__pointer' :id="'demo-' + index">
           <div v-for='(subObj, index) in mainObj.bot.bot_individuals' :key='index'
-            class='text-telegram-primary pt-2 pb-1 pl-5'
-            @click="$emit('getIndividualMessages', { roomName: subObj.individual.first_name, roomId :subObj.individual.id } )">
+            class='text-telegram__primary pt-2 pb-1 pl-5' @click="$emit('getIndividualMessages',
+            { roomName: subObj.individual.first_name, roomId :subObj.individual.id } )">
             {{ subObj.individual.first_name }}
           </div>
         </div>
@@ -25,27 +29,30 @@
   </div>
 </template>
 <script>
-  export default {
-    name: 'side-nav',
-    props: ['userName', 'contactsList'],
-    data() {
-      return {
-        data: {},
-      };
+export default {
+  name: 'side-nav',
+  props: ['userName', 'contactsList'],
+  data() {
+    return {
+      data: {},
+    };
+  },
+  methods: {
+    check() {
+      console.info('adfdf');
     },
-    methods: {
-      async logout() {
-        try {
-          await this.$http.get('/logout');
-          localStorage.removeItem('username');
-          localStorage.removeItem('Token');
-          this.$router.push('/login');
-        } catch (err) {
-          console.error(err);
-        }
-      },
+    async logout() {
+      try {
+        await this.$http.get('/logout');
+        localStorage.removeItem('username');
+        localStorage.removeItem('Token');
+        this.$router.push('/login');
+      } catch (err) {
+        console.error(err);
+      }
     },
-  };
+  },
+};
 </script>
 
 <style scoped>
@@ -94,10 +101,18 @@
 
   .logout {
     width: 15%;
-    background-size: 20px 20px;
+    background-size: 20px;
     background-position: center;
     background-repeat: no-repeat;
     background-image: url('../assets/logout.svg');
     cursor: pointer;
+  }
+
+  .channel-name {
+    flex-basis: 75%;
+  }
+
+  .expand-icon {
+    flex-basis: 25%;
   }
 </style>

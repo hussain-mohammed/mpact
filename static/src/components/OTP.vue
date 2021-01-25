@@ -1,7 +1,7 @@
 <template>
   <div class="otp-page width-404 bg-white border-0">
     <div class="phone-number">{{ phone }}</div>
-    <div class="edit-number text-center cursor-pointer" @click="$emit('hideOtpComponent')">
+    <div class="edit-number text-center cursor__pointer" @click="$emit('hideOtpComponent')">
       Edit phone number
     </div>
     <div class="otp-info text-center">
@@ -14,9 +14,9 @@
   </div>
 </template>
 <script>
-  export default {
-    props: ['phone'],
-  };
+export default {
+  props: ['phone'],
+};
 </script>
 
 <style scoped>

@@ -1,36 +1,36 @@
-import Vue from 'vue'
+import Vue from 'vue';
 import Router from 'vue-router';
 
-Vue.use(Router)
+Vue.use(Router);
 
 const router = new Router({
   mode: 'history',
   routes: [{
-      path: '',
-      redirect: '/login',
+    path: '',
+    redirect: '/login',
+  },
+  {
+    path: '/login',
+    name: 'Auth',
+    component: () => import('../views/Authentication.vue'),
+  },
+  {
+    path: '/chat',
+    name: 'chat',
+    component: () => import('../views/Chat.vue'),
+    meta: {
+      auth: true,
     },
-    {
-      path: '/login',
-      name: 'Auth',
-      component: () => import('../views/Authentication.vue')
-    },
-    {
-      path: '/chat',
-      name: 'chat',
-      component: () => import('../views/Chat.vue'),
-      meta: {
-        auth: true
-      }
-    }
-  ]
-})
+  },
+  ],
+});
 
 const token = localStorage.getItem('Token');
 router.beforeEach((to, from, next) => {
-  if (to.name == 'login') {
+  if (to.name === 'login') {
     next();
   } else if (to.meta.auth && token) {
-    next()
+    next();
   } else {
     next();
   }
