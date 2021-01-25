@@ -66,8 +66,10 @@ class GetIndividaulMessage(APIView):
 
     @token_required
     def get(self, request, phone, individual_id):
+        limit = request.GET.get("limit")
+        offset = request.GET.get("offset")
         result = new_or_current_event_loop().run_until_complete(
-            get_individual_msg(phone, individual_id)
+            get_individual_msg(phone, individual_id, limit, offset)
         )
         return Response(result[DATA], status=result[STATUS])
 

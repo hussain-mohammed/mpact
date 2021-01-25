@@ -199,13 +199,18 @@ async def get_dialog(phone):
         return NOT_AUTHORIZED
 
 
-async def get_individual_msg(phone, individual_id):
+async def get_individual_msg(phone, individual_id, limit, offset):
     """
     Returns private chat messages if the user is authorized
     """
     async with client_context(phone) as client:
         if await client.is_user_authorized():
-            data = Message.objects.filter(individual=individual_id)
+            if limit and offset:
+                data = Message.objects.filter(individual=individual_id)[int(offset):int(offset)+int(limit)]
+            elif limit:
+                data = Message.objects.filter(individual=individual_id)[:int(limit)]
+            else:
+                data = Message.objects.filter(individual=individual_id)
             serializer = MessageSerializer(data, many=True)
             return {
                 DATA: {"messages": serializer.data, IS_SUCCESS: True},
