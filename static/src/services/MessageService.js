@@ -6,11 +6,11 @@ export default {
     content,
   }) {
     try {
-      const result = await Api.post('/message', {
+      const response = await Api.post('/message', {
         individual: roomId,
         message: content,
       });
-      return result;
+      return response;
     } catch (err) {
       console.error(err);
       throw err;
@@ -22,13 +22,13 @@ export default {
     limit = 50,
   }) {
     try {
-      const result = await Api.get(`message/individual/${roomId}`, {
+      const response = await Api.get(`message/individual/${roomId}`, {
         params: {
           offset,
           limit,
         },
       });
-      return result;
+      return response;
     } catch (err) {
       console.error(err);
       throw err;
@@ -36,10 +36,56 @@ export default {
   },
   async fetchGroupMessages({
     roomId,
+    offset,
+    limit,
   }) {
     try {
-      const result = await Api.get(`message/chat/${roomId}`);
-      return result;
+      const response = await Api.get(`message/chat/${roomId}`, {
+        params: {
+          offset,
+          limit,
+        },
+      });
+      return response;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
+  async flagMessage({
+    roomId,
+    messageId,
+    firstName,
+    message,
+  }) {
+    try {
+      const response = await Api.post('flaggedmessages', {
+        roomId,
+        messageId,
+        firstName,
+        message,
+      });
+      return response;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
+  async fetchFlaggedMessages() {
+    try {
+      const response = await Api.get('flaggedmessages');
+      return response;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
+  async deleteFlaggedMessage({
+    id,
+  }) {
+    try {
+      const response = await Api.delete(`flaggedmessages/${id}`);
+      return response;
     } catch (err) {
       console.error(err);
       throw err;

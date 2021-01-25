@@ -10,8 +10,7 @@
               mpact-Telegram
             </h1>
           </div>
-          <div class='login-header-btn text-white cursor__pointer'
-          :class="{ 'text-danger': !nextButtonValidation }"
+          <div :class="['login-header-btn', 'text-white', 'cursor__pointer', { 'text-danger': !nextButtonValidation }]"
             @click='nextButtonValidation && moveToNextPage()'>
             Next
             <i class='next-btn'></i>
@@ -21,24 +20,24 @@
       <section class='position-relative'>
         <div class='position-absolute mx-auto left-right_0 w-100 d-grid
         justify-content-center login-top'>
-          <Login v-if='showLoginPage'
-          @moveToNextPage='nextButtonValidation && moveToNextPage()'>
+          <Login v-if='showLoginPage' @moveToNextPage='nextButtonValidation && moveToNextPage()'>
             <vue-tel-input v-model='phoneNumber' v-bind='telephoneProps'
-            @validate='validatePhoneNumber($event)'>
-            </vue-tel-input>
+            @validate='validatePhoneNumber($event)' />
           </Login>
-          <OTP @hideOtpComponent='showOTPPage = !showOTPPage; showLoginPage = !showLoginPage;'
-          v-if='showOTPPage' @receiveOtpText='validateOTP($event)' :phone='phoneNumber' />
+          <OTP @hideOtpComponent='showOTPPage = !showOTPPage; showLoginPage = !showLoginPage;' v-if='showOTPPage'
+            @receiveOtpText='validateOTP($event)' :phone='phoneNumber' />
           <TwoFactorAuth v-if='show2FaPage' @receive2FaText='validate2FaText($event)' />
           <div class='login-footer width-404 text-center' v-show='!isInfoHide'>
             <div class='footer-1'>
               Welcome to the official mpact-Telegram web-client.
             </div>
-            <div class='footer-2 cursor__pointer' @click='isInfoHide = !isInfoHide' v-show='!isInfoHide'>
+            <div class='footer-2 cursor__pointer' @click='isInfoHide = !isInfoHide'
+            v-show='!isInfoHide'>
               Learn more
             </div>
           </div>
-          <Info v-if='isInfoHide' @closeInfoComponent='isInfoHide = false' v-bind:receiveClass='showOTPPage' />
+          <Info v-if='isInfoHide' @closeInfoComponent='isInfoHide = false'
+          :receiveClass='showOTPPage' />
         </div>
       </section>
       <Toast :text='toastInput' :hasError='toastError' />
