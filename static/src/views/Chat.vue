@@ -32,6 +32,7 @@ export default {
   mounted() {
     this.userName = localStorage.getItem('username') || '';
     this.getContacts();
+    this.lastMessage = null;
   },
   data() {
     return {
@@ -43,9 +44,9 @@ export default {
       messagesLoaded: false,
       hideSideNav: true,
       roomName: '',
-      offset: 0,
       limit: 50,
       groupView: true,
+      lastMessage: null,
     };
   },
   methods: {
@@ -62,7 +63,6 @@ export default {
       options = {},
     }) {
       try {
-        this.messagesLoaded = false;
         const {
           roomId,
         } = room;
@@ -70,53 +70,53 @@ export default {
           reset = false,
         } = options;
         if (reset) {
-          this.offset = 50;
           return;
         }
         const {
-          offset,
           limit,
+          lastMessage,
+          groupView,
         } = this;
         let newMessages = [];
-        if (this.groupView) {
-          const data = await MessageService.fetchGroupMessages({
-            roomId,
-            offset,
-            limit,
-          });
+        const params = {
+          roomId,
+          limit,
+        };
+        if (lastMessage) {
+          params.offset = lastMessage.id;
+        }
+        if (groupView) {
+          const data = await MessageService.fetchGroupMessages(params);
           if (data.data.is_success) {
             newMessages = data.data.messages;
           }
         } else {
-          const data = await MessageService.getIndividualMessages({
-            roomId,
-            offset,
-            limit,
-          });
+          const data = await MessageService.getIndividualMessages(params);
           if (data.data.is_success) {
             newMessages = data.data.messages;
           }
         }
-        this.currentUserId = roomId;
-        const formattedMessages = [];
-        const formattedRoomStructure = [];
-        this.offset += this.limit;
         if (newMessages.length === 0) {
           this.messagesLoaded = true;
           return;
         }
+        this.currentUserId = roomId;
+        const formattedMessages = [];
+        const formattedRoomStructure = [];
         newMessages.forEach((d) => {
           if (d.individual !== d.sender) {
             this.currentUserId = d.sender;
           }
           formattedMessages.push({
-            _id: Math.random() * 1000,
+            _id: d.id,
+            id: d.id,
             content: d.message || '',
             sender_id: d.sender,
             date: this.convertDate(d.date),
             timestamp: this.convertTime(d.date),
           });
         });
+        this.lastMessage = newMessages[newMessages.length - 1];
         formattedRoomStructure.push({
           roomId,
           roomName: room.roomName,
@@ -133,28 +133,33 @@ export default {
       roomId,
     }) {
       try {
+        this.messagesLoaded = false;
         const {
-          offset,
           limit,
+          lastMessage,
         } = this;
-        const data = await MessageService.getIndividualMessages({
+        const params = {
           roomId,
-          offset,
           limit,
-        });
+        };
+        if (!this.groupView && lastMessage) {
+          params.offset = lastMessage.id;
+        }
+        const data = await MessageService.getIndividualMessages(params);
         if (data.data.is_success) {
           this.groupView = false;
-          this.offset += this.limit;
           this.resetChatWidget();
           const formattedMessages = [];
           const formattedRoomStructure = [];
           this.currentUserId = roomId;
-          data.data.messages.forEach((d) => {
+          const newMessages = data.data.messages;
+          newMessages.forEach((d) => {
             if (d.individual !== d.sender) {
               this.currentUserId = d.sender;
             }
             formattedMessages.push({
-              _id: Math.random() * 1000,
+              _id: d.id,
+              id: d.id,
               content: d.message || '',
               sender_id: d.sender,
               date: this.convertDate(d.date),
@@ -168,6 +173,7 @@ export default {
           });
           this.messages = formattedMessages;
           this.rooms = formattedRoomStructure;
+          this.lastMessage = newMessages[newMessages.length - 1];
         }
       } catch (err) {
         console.error(err);
@@ -179,21 +185,30 @@ export default {
     }) {
       try {
         const {
-          offset,
           limit,
+          lastMessage,
         } = this;
-        const data = await MessageService.fetchGroupMessages({
+        if (!this.groupView) {
+          this.lastMessage = null;
+        }
+        this.groupView = true;
+        const params = {
           roomId,
-          offset,
           limit,
-        });
+        };
+        if (this.groupView && lastMessage) {
+          params.offset = lastMessage.id;
+        }
+        this.messagesLoaded = false;
+        const data = await MessageService.fetchGroupMessages(params);
         if (data && data.data.is_success) {
           this.resetChatWidget();
           this.currentUserId = '';
           const formattedMessages = [];
           const formattedRoomStructure = [];
           const userList = [];
-          data.data.messages.forEach((d) => {
+          const newMessages = data.data.messages;
+          newMessages.forEach((d) => {
             if (d.individual !== d.sender) {
               this.currentUserId = d.sender;
             }
@@ -218,6 +233,7 @@ export default {
           });
           this.messages = formattedMessages;
           this.rooms = formattedRoomStructure;
+          [this.lastMessage] = newMessages;
         }
       } catch (err) {
         console.error(err);
