@@ -29,9 +29,9 @@ A Telegram-based expert support system
 
 ## Run
 
-1. Redis server
+1. Services (Redis)
 
-        $ redis-server
+        $ docker-compose up
 
 2. Celery
 
@@ -67,7 +67,7 @@ Now you can run a development server with
 
     $ npm install
     $ npm run dev
-    $ redis-server
+    $ docker-compose up
     $ celery -A telegram_bot beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     $ ./manage-dev runserver
 
