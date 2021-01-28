@@ -63,11 +63,7 @@ class CustomPeriodicTask(PeriodicTask):
 
 
 class CustomPeriodicForm(PeriodicTaskForm):
-    individuals = [(indi.id, indi.first_name) for indi in Individual.objects.all()]
-    groups = [(chat.id, chat.title) for chat in Chat.objects.all()]
-
     args = ChoiceField(
-        choices=[("chat", groups), ("individual", individuals)],
         label="Chat",
         required=False,
     )
@@ -75,6 +71,16 @@ class CustomPeriodicForm(PeriodicTaskForm):
     class Meta:
         model = CustomPeriodicTask
         exclude = ()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        groups = [(c.id, c.title) for c in Chat.objects.all()]
+        individuals = [(i.id, i.first_name) for i in Individual.objects.all()]
+        self.fields['args'].choices = [
+            ("chat", groups),
+            ("individual", individuals),
+        ]
 
     def clean_args(self):
         val = self.cleaned_data["args"]
