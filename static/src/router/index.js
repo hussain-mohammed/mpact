@@ -22,6 +22,14 @@ const router = new Router({
       auth: true,
     },
   },
+  {
+    path: '/bookmarks',
+    name: 'bookmarks',
+    component: () => import('../views/Bookmarks.vue'),
+    meta: {
+      auth: true,
+    },
+  },
   ],
 });
 

@@ -3,17 +3,18 @@
     <div class='h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center
     d-flex justify-content-around'>
       <div class='text-truncate username text-left'>{{ userName }}</div>
+      <!-- <div class='bookmark h-100' @click='gotToBookmarks()' title='Bookmarks'></div> -->
       <div class='logout h-100' @click='logout()' title='logout'></div>
     </div>
     <div class='chat-contacts'>
       <div class='side-nav-row mt-2' v-for='(mainObj, index) in contactsList' :key='index'>
-        <div class='w-100 bg-telegram__primary text-white d-flex justify-content-between'
-          :data-target="'#demo-' + index" data-toggle='collapse'>
-          <button class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0' type='button'
+        <div class='w-100 bg-telegram__primary text-white d-flex justify-content-between'>
+          <div class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0'
             @click="$emit('getGroupMessages', { roomName: mainObj.chat.title, roomId: mainObj.chat.id })">
             <span class='px-4 text-white'>{{ mainObj.chat.title }}</span>
-          </button>
-          <button class='btn expand-icon box-shadow__none border-0 rounded-0 text-white' type='button'>
+          </div>
+          <button class='btn expand-icon box-shadow__none border-0 rounded-0 text-white' type='button'
+          :data-target="'#demo-' + index" data-toggle='collapse'>
             <i class='fa'></i>
           </button>
         </div>
@@ -38,8 +39,8 @@ export default {
     };
   },
   methods: {
-    check() {
-      console.info('adfdf');
+    async gotToBookmarks() {
+      this.$router.push('/bookmarks');
     },
     async logout() {
       try {
@@ -97,6 +98,15 @@ export default {
 
   .username {
     width: 85%;
+  }
+
+  .bookmark {
+    width: 15%;
+    background-size: 20px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url('../assets/bookmark.svg');
+    cursor: pointer;
   }
 
   .logout {

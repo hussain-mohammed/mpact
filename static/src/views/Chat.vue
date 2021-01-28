@@ -63,6 +63,7 @@ export default {
       options = {},
     }) {
       try {
+        this.messagesLoaded = false;
         const {
           roomId,
         } = room;
@@ -81,6 +82,7 @@ export default {
         const params = {
           roomId,
           limit,
+          lazy: true,
         };
         if (lastMessage) {
           params.offset = lastMessage.id;
@@ -96,7 +98,7 @@ export default {
             newMessages = data.data.messages;
           }
         }
-        if (newMessages.length === 0) {
+        if (!newMessages.length) {
           this.messagesLoaded = true;
           return;
         }
@@ -131,6 +133,7 @@ export default {
     async getIndividualMessages({
       roomName,
       roomId,
+      lazy = false,
     }) {
       try {
         this.messagesLoaded = false;
@@ -142,13 +145,13 @@ export default {
           roomId,
           limit,
         };
-        if (!this.groupView && lastMessage) {
+        if (!this.groupView && lazy && lastMessage) {
           params.offset = lastMessage.id;
         }
+        this.resetChatWidget();
         const data = await MessageService.getIndividualMessages(params);
         if (data.data.is_success) {
           this.groupView = false;
-          this.resetChatWidget();
           const formattedMessages = [];
           const formattedRoomStructure = [];
           this.currentUserId = roomId;
@@ -182,6 +185,7 @@ export default {
     async getGroupMessages({
       roomName,
       roomId,
+      lazy = false,
     }) {
       try {
         const {
@@ -196,13 +200,12 @@ export default {
           roomId,
           limit,
         };
-        if (this.groupView && lastMessage) {
+        if (this.messages.length && lazy && lastMessage) {
           params.offset = lastMessage.id;
         }
-        this.messagesLoaded = false;
+        this.resetChatWidget();
         const data = await MessageService.fetchGroupMessages(params);
         if (data && data.data.is_success) {
-          this.resetChatWidget();
           this.currentUserId = '';
           const formattedMessages = [];
           const formattedRoomStructure = [];
@@ -274,6 +277,7 @@ export default {
       this.rooms.length = 0;
       this.messages.length = 0;
       this.messagesLoaded = false;
+      this.lastMessage = null;
     },
     convertDate(date) {
       const dateString = new Date(date);
