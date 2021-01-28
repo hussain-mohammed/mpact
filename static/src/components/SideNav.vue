@@ -3,7 +3,6 @@
     <div class='h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center
     d-flex justify-content-around'>
       <div class='text-truncate username text-left'>{{ userName }}</div>
-      <!-- <div class='bookmark h-100' @click='gotToBookmarks()' title='Bookmarks'></div> -->
       <div class='logout h-100' @click='logout()' title='logout'></div>
     </div>
     <div class='chat-contacts'>

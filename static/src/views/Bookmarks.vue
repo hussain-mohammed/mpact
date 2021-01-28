@@ -2,9 +2,9 @@
   <div class='vw-100 vh-100'>
     <div class='row m-0 p-0'>
       <div class='col-10 p-0'>
-        <chat-window height='100vh' class='bookmarks-widget-1' :currentUserId='currentUserId'
-        :messages='bookmarks' :messages-loaded='fetchBookmarks'
-        @fetch-messages='loadOldMessages($event)' />
+        <chat-window height='100vh' class='bookmarks-widget-1' :currentUserId='currentUserId' :messages='bookmarks'
+          :single-room='true'
+          :messages-loaded='false' @fetch-messages='loadOldMessages($event)' />
       </div>
     </div>
   </div>
@@ -21,15 +21,24 @@ export default {
   },
   data() {
     return {
-      currentUserId: '',
+      currentUserId: 1,
       bookmarks: [],
+      limit: 50,
+      lastMessage: null,
     };
   },
   methods: {
     async fetchBookmarks() {
       try {
         const result = await MessageService.fetchFlaggedMessages();
-        this.bookmarks = result;
+        this.bookmarks = [{
+          id: 2,
+          room_id: 122955,
+          message_id: 178,
+          first_name: 'John Doe',
+          message: 'Test',
+          date: '2021-01-22T16:40:06.156602Z',
+        }, ...result];
       } catch (err) {
         console.error(err);
       }

@@ -52,6 +52,34 @@ export default {
       throw err;
     }
   },
+  async editMessage({
+    id,
+    content,
+  }) {
+    try {
+      const response = await Api.put('/message', {
+        id,
+        content,
+      });
+      return response;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
+  async deleteMessage({
+    id,
+  }) {
+    try {
+      const response = await Api.delete('/message', {
+        id,
+      });
+      return response;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
   async flagMessage({
     roomId,
     messageId,

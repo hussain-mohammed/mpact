@@ -10,7 +10,8 @@
         <chat-window height='100vh' class='chat-widget-1' :currentUserId='currentUserId'
         :rooms='rooms' :messages='messages' :single-room='hideSideNav'
          :messages-loaded='messagesLoaded' @fetch-messages='loadOldMessages($event)'
-         @send-message='sendMessages($event)' />
+         @send-message='sendMessages($event)' :message-actions='messageActions'
+         @message-action-handler='messageActionHandler($event)'/>
       </div>
     </div>
   </div>
@@ -47,9 +48,95 @@ export default {
       limit: 50,
       groupView: true,
       lastMessage: null,
+      messageActions: [
+        {
+          name: 'flagMessage',
+          title: 'Flag Message',
+        },
+        {
+          name: 'editMessage',
+          title: 'Edit Message',
+          onlyMe: true,
+        },
+        {
+          name: 'replyMessage',
+          title: 'Reply',
+        },
+        {
+          name: 'deleteMessage',
+          title: 'Delete Message',
+          onlyMe: true,
+        },
+      ],
     };
   },
   methods: {
+    async messageActionHandler({ roomId, action, message }) {
+      try {
+        const options = { roomId, message };
+        switch (action.name) {
+        case 'flagMessage':
+          this.flagMessage(options);
+          break;
+        case 'editMessage':
+          this.editMessage(options);
+          break;
+        case 'replyMessage':
+          this.replyMessage(options);
+          break;
+        case 'deleteMessage':
+          this.deleteMessage(options);
+          break;
+        default:
+          break;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    async flagMessage({ roomId, message }) {
+      try {
+        const params = {
+          roomId,
+          messageId: message.id,
+          firstName: message.sender_id,
+          message: message.content,
+        };
+        await MessageService.flagMessage(params);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    async editMessage({ roomId, message }) {
+      try {
+        const params = {
+          roomId,
+          id: message.id,
+          content: message.content,
+        };
+        await MessageService.editMessage(params);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    async replyMessage({ roomId, message }) {
+      try {
+        const params = {};
+        console.info('replyMessage', roomId, message);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    async deleteMessage({ message }) {
+      try {
+        const params = {
+          id: message.id,
+        };
+        await MessageService.deleteMessage(params);
+      } catch (err) {
+        console.error(err);
+      }
+    },
     async getContacts() {
       try {
         const data = await this.$http.get('/dialogs');
@@ -63,14 +150,18 @@ export default {
       options = {},
     }) {
       try {
-        this.messagesLoaded = false;
         const {
           roomId,
         } = room;
         const {
           reset = false,
         } = options;
-        if (reset) {
+        if (this.messages.length <= 50) {
+          this.messagesLoaded = true;
+          return;
+        }
+        if (reset || this.messagesLoaded) {
+          this.messagesLoaded = false;
           return;
         }
         const {
@@ -98,17 +189,24 @@ export default {
             newMessages = data.data.messages;
           }
         }
-        if (!newMessages.length) {
+        if (!newMessages.length || newMessages.length <= 50) {
           this.messagesLoaded = true;
           return;
         }
-        this.currentUserId = roomId;
+        // this.currentUserId = roomId;
         const formattedMessages = [];
         const formattedRoomStructure = [];
+        const users = [];
         newMessages.forEach((d) => {
-          if (d.individual !== d.sender) {
-            this.currentUserId = d.sender;
+          if (!groupView) {
+            if (d.individual !== d.sender) {
+              this.currentUserId = d.sender;
+            }
           }
+          users.push({
+            _id: d.id,
+            username: d.sender,
+          });
           formattedMessages.push({
             _id: d.id,
             id: d.id,
@@ -118,13 +216,17 @@ export default {
             timestamp: this.convertTime(d.date),
           });
         });
-        this.lastMessage = newMessages[newMessages.length - 1];
+        if (groupView) {
+          [this.lastMessage] = newMessages;
+        } else {
+          this.lastMessage = newMessages[newMessages.length - 1];
+        }
         formattedRoomStructure.push({
           roomId,
           roomName: room.roomName,
-          users: [],
+          users,
         });
-        this.messages = [...formattedMessages, ...this.messages];
+        this.messages = [...this.formattedMessages, ...this.messages];
         this.rooms = formattedRoomStructure;
       } catch (err) {
         console.error(err);
@@ -156,6 +258,9 @@ export default {
           const formattedRoomStructure = [];
           this.currentUserId = roomId;
           const newMessages = data.data.messages;
+          if (newMessages.length <= 50) {
+            this.messagesLoaded = true;
+          }
           newMessages.forEach((d) => {
             if (d.individual !== d.sender) {
               this.currentUserId = d.sender;
@@ -211,6 +316,9 @@ export default {
           const formattedRoomStructure = [];
           const userList = [];
           const newMessages = data.data.messages;
+          if (newMessages.length <= 50) {
+            this.messagesLoaded = true;
+          }
           newMessages.forEach((d) => {
             if (d.individual !== d.sender) {
               this.currentUserId = d.sender;
