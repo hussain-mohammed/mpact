@@ -39,5 +39,5 @@ NOT_AUTHORIZED = {
 }
 
 RECORD_NF = "Record not found"
-DELETE_SUCCESS = "Delete successfull"
+DELETE_SUCCESS = "Delete successful"
 DELETE_FAIL = "Delete fail"
