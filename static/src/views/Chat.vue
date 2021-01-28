@@ -156,7 +156,7 @@ export default {
         const {
           reset = false,
         } = options;
-        if (this.messages.length <= 50) {
+        if (this.messages.length < 50) {
           this.messagesLoaded = true;
           return;
         }
@@ -258,7 +258,7 @@ export default {
           const formattedRoomStructure = [];
           this.currentUserId = roomId;
           const newMessages = data.data.messages;
-          if (newMessages.length <= 50) {
+          if (newMessages.length < 50) {
             this.messagesLoaded = true;
           }
           newMessages.forEach((d) => {
@@ -316,7 +316,7 @@ export default {
           const formattedRoomStructure = [];
           const userList = [];
           const newMessages = data.data.messages;
-          if (newMessages.length <= 50) {
+          if (newMessages.length < 50) {
             this.messagesLoaded = true;
           }
           newMessages.forEach((d) => {
