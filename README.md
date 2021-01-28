@@ -27,19 +27,6 @@ A Telegram-based expert support system
     $ export SECURED_URL_SECRET_KEY="1234"
     $ export SECURITY_PASSWORD_SALT="1234"
 
-## Run
-
-1. Services (Redis)
-
-        $ docker-compose up
-
-2. Celery
-
-        $  celery -A telegram_bot beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
-
-3. Django server
-
-        $ ./manage.py runserver
 
 ## There is a script for that
 
@@ -62,6 +49,9 @@ You can generate a secret key with
     chars = string.ascii_letters + string.digits
     key = "".join(secrets.choice(chars) for x in range(64))
     print(key)'
+
+
+## Run
 
 Now you can run a development server with
 
