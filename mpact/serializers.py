@@ -43,5 +43,5 @@ class ChatBotSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ["individual", "sender", "message", "date"]
-        read_only_fields = ["date"]
+        fields = ["id", "individual", "sender", "message", "date"]
+        read_only_fields = ["id", "date"]
