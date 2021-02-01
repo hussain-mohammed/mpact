@@ -24,6 +24,8 @@ INDIVIDUAL = "individual"
 TOKEN = "token"
 FLAGGED_MESSAGE = "flagged_message"
 
+DIALOGS_LIMIT = 25
+
 # Environment Variables
 TELEGRAM_API_ID = os.environ["TELEGRAM_API_ID"]
 TELEGRAM_API_HASH = os.environ["TELEGRAM_API_HASH"]
@@ -41,3 +43,4 @@ NOT_AUTHORIZED = {
 RECORD_NF = "Record not found"
 DELETE_SUCCESS = "Delete successful"
 DELETE_FAIL = "Delete fail"
+GROUP_MSGS_FORBIDDEN = "Cannot fetch the message."
