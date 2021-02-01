@@ -1,407 +1,247 @@
 <template>
   <div class='vw-100 vh-100'>
     <div class='row m-0 p-0'>
-      <div class='col-2 p-0 z-index__25'>
+      <div class='col-2 p-0 z-index-25'>
         <side-nav :userName='userName' :contactsList='contactsList'
-          @getIndividualMessages='getIndividualMessages($event)'
-          @getGroupMessages='getGroupMessages($event)' />
+          @getIndividualMessages='getIndividualMessages($event)' @getGroupMessages='getGroupMessages($event)' />
       </div>
       <div class='col-10 p-0'>
-        <chat-window height='100vh' class='chat-widget-1' :currentUserId='currentUserId'
-        :rooms='rooms' :messages='messages' :single-room='hideSideNav'
-         :messages-loaded='messagesLoaded' @fetch-messages='loadOldMessages($event)'
-         @send-message='sendMessages($event)' :message-actions='messageActions'
-         @message-action-handler='messageActionHandler($event)'/>
+        <chat-window :currentUserId='currentUserId' :rooms='rooms' :messages='messages' :single-room='hideSideNav'
+          @send-message='sendMessages($event)' height='100vh' class='chat-widget-1' :messages-loaded='messagesLoaded' />
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import MessageService from '../services/MessageService';
-import 'vue-advanced-chat/dist/vue-advanced-chat.css';
+  const ChatWindow = () => import('vue-advanced-chat');
+  const SideNav = () => import('../components/SideNav.vue');
+  import MessageService from '../services/MessageService';
+  import 'vue-advanced-chat/dist/vue-advanced-chat.css';
 
-const ChatWindow = () => import('vue-advanced-chat');
-const SideNav = () => import('../components/SideNav.vue');
-
-export default {
-  name: 'chat',
-  components: {
-    ChatWindow,
-    SideNav,
-  },
-  mounted() {
-    this.userName = localStorage.getItem('username') || '';
-    this.getContacts();
-    this.lastMessage = null;
-  },
-  data() {
-    return {
-      userName: '',
-      rooms: [],
-      messages: [],
-      currentUserId: 1,
-      contactsList: null,
-      messagesLoaded: false,
-      hideSideNav: true,
-      roomName: '',
-      limit: 50,
-      groupView: true,
-      offset: 0,
-      lastMessage: null,
-      messageActions: [
-        {
-          name: 'flagMessage',
-          title: 'Flag Message',
-        },
-        {
-          name: 'editMessage',
-          title: 'Edit Message',
-          onlyMe: true,
-        },
-        {
-          name: 'replyMessage',
-          title: 'Reply',
-        },
-        {
-          name: 'deleteMessage',
-          title: 'Delete Message',
-          onlyMe: true,
-        },
-      ],
-    };
-  },
-  methods: {
-    async messageActionHandler({ roomId, action, message }) {
-      try {
-        const options = { roomId, message };
-        switch (action.name) {
-        case 'flagMessage':
-          this.flagMessage(options);
-          break;
-        case 'editMessage':
-          this.editMessage(options);
-          break;
-        case 'replyMessage':
-          this.replyMessage(options);
-          break;
-        case 'deleteMessage':
-          this.deleteMessage(options);
-          break;
-        default:
-          break;
+  export default {
+    name: 'chat',
+    components: {
+      ChatWindow,
+      SideNav,
+    },
+    mounted() {
+      this.userName = localStorage.getItem('username') || '';
+      this.getContacts();
+    },
+    data() {
+      return {
+        userName: '',
+        rooms: [],
+        messages: [],
+        currentUserId: 1,
+        contactsList: null,
+        messagesLoaded: false,
+        hideSideNav: true,
+        roomName: '',
+        skip: 0,
+        limit: 50,
+      };
+    },
+    methods: {
+      checkNewMessages() {
+        const scrollY = window.scrollY
+        const visible = document.documentElement.clientHeight
+        const pageHeight = document.documentElement.scrollHeight
+        const bottomOfPage = visible + scrollY >= pageHeight
+        return bottomOfPage || pageHeight < visible
+      },
+      async getContacts() {
+        try {
+          const data = await this.$http.get('/dialogs');
+          this.contactsList = data.data.dialogs;
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async flagMessage({ roomId, message }) {
-      try {
-        const params = {
-          roomId,
-          messageId: message.id,
-          firstName: message.sender_id,
-          message: message.content,
-        };
-        await MessageService.flagMessage(params);
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async editMessage({ roomId, message }) {
-      try {
-        const params = {
-          roomId,
-          id: message.id,
-          content: message.content,
-        };
-        await MessageService.editMessage(params);
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async replyMessage({ roomId, message }) {
-      try {
-        const params = {};
-        console.info('replyMessage', roomId, message);
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async deleteMessage({ message }) {
-      try {
-        const params = {
-          id: message.id,
-        };
-        await MessageService.deleteMessage(params);
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async getContacts() {
-      try {
-        const data = await this.$http.get('/dialogs');
-        this.contactsList = data.data.dialogs;
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async loadOldMessages({
-      room,
-      options = {},
-    }) {
-      try {
-        const {
-          roomId,
-        } = room;
-        const {
-          reset = false,
-        } = options;
-        this.messagesLoaded = false;
-        if (this.messages.length < 50) {
-          this.messagesLoaded = true;
-          return;
-        }
-        if (reset) {
-          return;
-        }
-        const {
-          limit,
-          lastMessage,
-          groupView,
-        } = this;
-        let newMessages = [];
-        const params = {
-          roomId,
-          limit,
-          lazy: true,
-        };
-        if (groupView && lastMessage) {
-          params.offset = lastMessage.id;
-        } else {
-          this.offset += 50;
-          params.offset = this.offset;
-        }
-        if (groupView) {
-          const data = await MessageService.fetchGroupMessages(params);
-          if (data.data.is_success) {
-            newMessages = data.data.messages;
+      },
+      async loadOldMessages({
+        room,
+        options = {},
+      }) {
+        try {
+          const {
+            roomId
+          } = room;
+          const {
+            reset = false,
+          } = options;
+          if (reset) {
+            this.skip = 50;
+            return;
           }
-        } else {
-          const data = await MessageService.getIndividualMessages(params);
-          if (data.data.is_success) {
-            newMessages = data.data.messages;
-          }
-        }
-        if (!newMessages.length) {
-          this.messagesLoaded = true;
-          return;
-        }
-        const formattedMessages = [];
-        const formattedRoomStructure = [];
-        const users = [];
-        newMessages.forEach((d) => {
-          if (!groupView) {
-            if (d.individual !== d.sender) {
-              this.currentUserId = d.sender;
-            }
-          }
-          users.push({
-            _id: d.id,
-            username: d.sender,
+          const {
+            skip,
+            limit
+          } = this;
+          const data = await MessageService.getIndividualMessages({
+            roomId,
+            skip,
+            limit,
           });
-          formattedMessages.push({
-            _id: d.id,
-            id: d.id,
+          this.currentUserId = roomId;
+          this.skip = this.skip + this.limit;
+          const newMessages = data.data.messages.map((d, i) => ({
+            _id: Math.random() * 1000,
             content: d.message || '',
-            sender_id: d.sender,
+            sender_id: (roomId === d.sender ? d.sender : d.individual),
             date: this.convertDate(d.date),
             timestamp: this.convertTime(d.date),
-          });
-        });
-        if (groupView) {
-          [this.lastMessage] = newMessages;
-        }
-        formattedRoomStructure.push({
-          roomId,
-          roomName: room.roomName,
-          users,
-        });
-        if (formattedMessages.length < 50) {
-          this.messagesLoaded = true;
-        }
-        this.messages = [...formattedMessages, ...this.messages];
-        this.rooms = formattedRoomStructure;
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async getIndividualMessages({
-      roomName,
-      roomId,
-    }) {
-      try {
-        this.messagesLoaded = false;
-        this.offset = 0;
-        const {
-          limit,
-          offset,
-        } = this;
-        const params = {
-          roomId,
-          limit,
-          offset,
-        };
-        this.resetChatWidget();
-        const data = await MessageService.getIndividualMessages(params);
-        if (data.data.is_success) {
-          this.groupView = false;
-          const formattedMessages = [];
-          const formattedRoomStructure = [];
-          this.currentUserId = roomId;
-          const newMessages = data.data.messages;
-          if (newMessages.length < 50) {
-            this.messagesLoaded = true;
-          }
-          newMessages.forEach((d) => {
-            if (d.individual !== d.sender) {
-              this.currentUserId = d.sender;
-            }
-            formattedMessages.push({
-              _id: d.id,
-              id: d.id,
-              content: d.message || '',
-              sender_id: d.sender,
-              date: this.convertDate(d.date),
-              timestamp: this.convertTime(d.date),
-            });
-          });
-          formattedRoomStructure.push({
+          }));
+          const rooms = [];
+          rooms.push({
             roomId,
             roomName,
             users: [],
           });
-          this.messages = formattedMessages;
-          this.rooms = formattedRoomStructure;
+          this.messages = [...newMessages, ...this.messages];
+          this.rooms = rooms;
+          this.messagesLoaded = true;
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async getGroupMessages({
-      roomName,
-      roomId,
-      lazy = false,
-    }) {
-      try {
-        const {
-          limit,
-          lastMessage,
-        } = this;
-        if (!this.groupView) {
-          this.lastMessage = null;
-        }
-        this.groupView = true;
-        const params = {
-          roomId,
-          limit,
-        };
-        if (this.messages.length && lazy && lastMessage) {
-          params.offset = lastMessage.id;
-        }
-        this.resetChatWidget();
-        const data = await MessageService.fetchGroupMessages(params);
-        if (data && data.data.is_success) {
-          this.currentUserId = '';
-          const formattedMessages = [];
-          const formattedRoomStructure = [];
-          const userList = [];
-          const newMessages = data.data.messages;
-          if (newMessages.length < 50) {
+      },
+      async getIndividualMessages({
+        roomName,
+        roomId
+      }) {
+        try {
+          const {
+            skip,
+            limit
+          } = this;
+          const data = await MessageService.getIndividualMessages({
+            roomId,
+            skip,
+            limit,
+          })
+          if (data.data.is_success) {
+            this.skip = this.skip + this.limit;
+            this.resetChatWidget();
+            const requireMessageStructure = [];
+            const requireRoomStructure = [];
+            this.currentUserId = roomId;
+            data.data.messages.map((d, i) => {
+              if (d.individual != d.sender) {
+                this.currentUserId = d.sender
+              }
+              requireMessageStructure.push({
+                _id: Math.random() * 1000,
+                content: d.message || '',
+                sender_id: d.sender,
+                date: this.convertDate(d.date),
+                timestamp: this.convertTime(d.date),
+              });
+            });
+            requireRoomStructure.push({
+              roomId,
+              roomName,
+              users: [],
+            });
+            this.messages = requireMessageStructure;
+            this.rooms = requireRoomStructure;
             this.messagesLoaded = true;
           }
-          newMessages.forEach((d) => {
-            if (d.individual !== d.sender) {
-              this.currentUserId = d.sender;
-            }
-            this.roomName = d.sender;
-            userList.push({
-              _id: d.id,
-              username: d.sender,
-            });
-            formattedMessages.push({
-              _id: d.id || '',
-              content: d.message || '',
-              sender_id: d.sender || '',
-              date: this.convertDate(d.date),
-              timestamp: this.convertTime(d.date),
-              username: this.roomName,
-            });
-          });
-          formattedRoomStructure.push({
+        } catch (err) {
+          console.error(err);
+        }
+      },
+      async getGroupMessages({
+        roomName,
+        roomId
+      }) {
+        try {
+          const data = await MessageService.fetchGroupMessages({
             roomId,
-            roomName,
-            users: userList,
-          });
-          this.messages = formattedMessages;
-          this.rooms = formattedRoomStructure;
-          [this.lastMessage] = newMessages;
+          })
+          if (data && data.data.is_success) {
+            this.resetChatWidget();
+            this.currentUserId = '';
+            const requireMessageStructure = [];
+            const requireRoomStructure = [];
+            const userList = [];
+            data.data.messages.map((d, index) => {
+              this.roomName = d.sender;
+              userList.push({
+                _id: d.id,
+                username: d.sender,
+              });
+              requireMessageStructure.push({
+                _id: d.id || '',
+                content: d.message || '',
+                sender_id: d.sender || '',
+                date: this.convertDate(d.date),
+                timestamp: this.convertTime(d.date),
+                username: this.roomName,
+              });
+            });
+            requireRoomStructure.push({
+              roomId: roomId,
+              roomName,
+              users: userList
+            });
+            this.messages = requireMessageStructure;
+            this.rooms = requireRoomStructure;
+            this.messagesLoaded = true;
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async sendMessages({
-      roomId,
-      content,
-      file,
-      replyMessage,
-    }) {
-      try {
-        const data = await MessageService.addNewMessage({
-          roomId,
-          content,
-          file,
-          replyMessage,
-        });
-        if (data && data.status === 200) {
-          this.messagesLoaded = false;
-          const newMessages = [...this.messages, {
-            _id: Math.random().toString(32).slice(2),
-            individual: roomId,
+      },
+      async sendMessages({
+        roomId,
+        content,
+        file,
+        replyMessage
+      }) {
+        try {
+          const data = await MessageService.addNewMessage({
+            roomId,
             content,
-            sender_id: this.currentUserId,
-            date: this.convertDate(new Date()),
-            timestamp: this.convertTime(new Date()),
-            username: this.sender,
-          }];
-          this.messages = newMessages;
-          this.messagesLoaded = true;
+          });
+          if (data && data.status === 200) {
+            this.messagesLoaded = false;
+            const newMessages = [...this.messages, {
+              _id: Math.random().toString(32).slice(2),
+              individual: roomId,
+              content,
+              sender_id: this.currentUserId,
+              date: this.convertDate(new Date()),
+              timestamp: this.convertTime(new Date()),
+              username: this.sender,
+            }];
+            this.messages = newMessages;
+            this.messagesLoaded = true;
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
-      }
+      },
+      resetChatWidget() {
+        this.rooms.length = 0;
+        this.messages.length = 0;
+        this.messagesLoaded = false;
+      },
+      convertDate(date) {
+        const dateString = new Date(date);
+        let month = '' + (dateString.getMonth() + 1),
+          day = '' + dateString.getDate(),
+          year = dateString.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        return [day, month, year].join('-');
+      },
+      convertTime(time) {
+        const timeString = new Date(time);
+        return `${timeString.getHours()}:${timeString.getMinutes()}`;
+      },
     },
-    resetChatWidget() {
-      this.rooms.length = 0;
-      this.messages.length = 0;
-      this.messagesLoaded = false;
-      this.lastMessage = null;
-      this.offset = 0;
-    },
-    convertDate(date) {
-      const dateString = new Date(date);
-      let month = `${dateString.getMonth() + 1}`;
-      let day = `${dateString.getDate()}`;
-      const year = dateString.getFullYear();
-      if (month.length < 2) month = `0${month}`;
-      if (day.length < 2) day = `0${day}`;
-      return [day, month, year].join('-');
-    },
-    convertTime(time) {
-      const timeString = new Date(time);
-      return `${timeString.getHours()}:${timeString.getMinutes()}`;
-    },
-  },
-};
+  };
 </script>
+
+<style scoped>
+</style>

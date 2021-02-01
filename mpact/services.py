@@ -172,16 +172,14 @@ async def send_msg(phone, data):
                         id=data[INDIVIDUAL]
                     ).access_hash
                     receiver = InputPeerUser(int(data[INDIVIDUAL]), int(access_hash))
-                    msg_inst = await bot.send_message(receiver, data[MESSAGE])
-                    sent_msg = serializer.data
                 else:
                     receiver = await client.get_entity(int(data[INDIVIDUAL]))
-                    msg_inst = await bot.send_message(receiver, data[MESSAGE])
-                    sent_msg = {"id": msg_inst.id, "sender": current_bot.username}
+                await bot.send_message(receiver, data[MESSAGE])
 
             return {
-                DATA: {MESSAGE: sent_msg, IS_SUCCESS: True},
+                DATA: {MESSAGE: MESSAGE_SENT},
                 STATUS: status.HTTP_200_OK,
+                IS_SUCCESS: True,
             }
         return NOT_AUTHORIZED
 
@@ -201,27 +199,16 @@ async def get_dialog(phone):
         return NOT_AUTHORIZED
 
 
-async def get_individual_msg(phone, individual_id, limit, offset):
+async def get_individual_msg(phone, individual_id):
     """
     Returns private chat messages if the user is authorized
     """
     async with client_context(phone) as client:
         if await client.is_user_authorized():
-            if limit and offset:
-                data = Message.objects.filter(individual=individual_id).order_by(
-                    "-date"
-                )[int(offset) : int(offset) + int(limit)]
-            elif limit:
-                data = Message.objects.filter(individual=individual_id).order_by(
-                    "-date"
-                )[: int(limit)]
-            else:
-                data = Message.objects.filter(individual=individual_id).order_by(
-                    "-date"
-                )
+            data = Message.objects.filter(individual=individual_id)
             serializer = MessageSerializer(data, many=True)
             return {
-                DATA: {"messages": serializer.data[::-1], IS_SUCCESS: True},
+                DATA: {"messages": serializer.data, IS_SUCCESS: True},
                 STATUS: status.HTTP_200_OK,
             }
         return NOT_AUTHORIZED

@@ -1,28 +1,29 @@
 import Axios from 'axios';
 import router from '../router/index';
 
-const baseURL = `${window.location.origin}/api`;
-
+const baseURL = `${location.origin}/api`;
 const axios = Axios.create({
   baseURL,
 });
 
 axios.interceptors.request.use(
-  (config) => {
+  config => {
     const Token = localStorage.getItem('Token');
-    const newConfig = config;
-    newConfig.headers = {
+    config.headers = {
       Token,
-    };
-    return newConfig;
-  }, (err) => Promise.reject(err),
-);
+    }
+    return config;
+  }, err => {
+    return Promise.reject(err)
+  })
 
-axios.interceptors.response.use((res) => res, (err) => {
+axios.interceptors.response.use(res => {
+  return res;
+}, err => {
   if (err.response.status === 401 || err.response.status === 403) {
     router.push('/login');
   }
-  return Promise.reject(err);
-});
+  return Promise.reject(err)
+})
 
 export default axios;
