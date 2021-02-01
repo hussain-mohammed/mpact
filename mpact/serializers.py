@@ -14,7 +14,7 @@ from .models import (
 class IndividualSerializer(serializers.ModelSerializer):
     class Meta:
         model = Individual
-        fields = ["id", "username", "first_name", "last_name"]
+        exclude = ["access_hash", "bots"]
 
 
 class BotIndividualSerializer(serializers.ModelSerializer):

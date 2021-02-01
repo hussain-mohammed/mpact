@@ -54,6 +54,11 @@ class Individual(models.Model):
     first_name = models.TextField()
     last_name = models.TextField(null=True)
     access_hash = models.TextField()
+    study_id = models.TextField(null=True)
+    age = models.TextField(null=True)
+    gender = models.TextField(null=True)
+    address = models.TextField(null=True)
+    notes = models.TextField(null=True)
     bots = models.ManyToManyField(Bot, through="BotIndividual")
 
     def __str__(self):
