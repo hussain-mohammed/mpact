@@ -4,14 +4,15 @@ from constants import (
     BOT_TOKEN,
     CODE,
     DATA,
+    DIALOGS_LIMIT,
     FIRST_NAME,
+    GROUP_MSGS_FORBIDDEN,
     INDIVIDUAL,
     INVALID_CODE,
     IS_SUCCESS,
     LAST_NAME,
     LOGOUT,
     MESSAGE,
-    MESSAGE_SENT,
     NOT_AUTHORIZED,
     PASSWORD,
     PASSWORD_REQUIRED,
@@ -38,7 +39,7 @@ from telethon.errors import (
 from telethon.tl.types import InputPeerUser
 from utils import encode_token, get_or_none
 
-from .models import ChatBot, Individual, Message
+from .models import BotIndividual, ChatBot, Individual, Message
 from .serializers import ChatBotSerializer, MessageSerializer
 
 
@@ -233,20 +234,31 @@ async def get_chat_msg(phone, chat_id, limit, offset):
     """
     async with client_context(phone) as client:
         if await client.is_user_authorized():
-            await client.get_dialogs()
+            await client.get_dialogs(limit=DIALOGS_LIMIT)
             msgs = []
-            if limit and offset:
-                async for message in client.iter_messages(
-                    chat_id, limit=int(limit), offset_id=int(offset)
-                ):
-                    extract_messages(message, msgs)
-            elif limit:
-                async for message in client.iter_messages(chat_id, limit=int(limit)):
-                    extract_messages(message, msgs)
-            else:
-                async for message in client.iter_messages(chat_id):
-                    extract_messages(message, msgs)
-
+            individuals_id = extract_individual_ids(chat_id)
+            try:
+                if limit and offset:
+                    async for message in client.iter_messages(
+                        chat_id, limit=int(limit), offset_id=int(offset)
+                    ):
+                        extract_messages(message, msgs, individuals_id)
+                elif limit:
+                    async for message in client.iter_messages(
+                        chat_id, limit=int(limit)
+                    ):
+                        extract_messages(message, msgs, individuals_id)
+                else:
+                    async for message in client.iter_messages(chat_id):
+                        extract_messages(message, msgs, individuals_id)
+            except ValueError:
+                return {
+                    DATA: {
+                        MESSAGE: GROUP_MSGS_FORBIDDEN,
+                        IS_SUCCESS: False,
+                    },
+                    STATUS: status.HTTP_403_FORBIDDEN,
+                }
             return {
                 DATA: {"messages": msgs[::-1], IS_SUCCESS: True},
                 STATUS: status.HTTP_200_OK,
@@ -254,13 +266,25 @@ async def get_chat_msg(phone, chat_id, limit, offset):
         return NOT_AUTHORIZED
 
 
-def extract_messages(message, msgs):
+def extract_messages(message, msgs, individuals_id):
     if message.message:
-        msgs.append(
-            {
-                "id": message.id,
-                "sender": message.sender.first_name,
-                MESSAGE: message.text,
-                "date": message.date,
-            }
-        )
+        msg = {
+            "id": message.id,
+            "sender": message.sender.first_name,
+            MESSAGE: message.text,
+            "date": message.date,
+            "is_link": False,
+        }
+        if message.sender.id in individuals_id:
+            msg["is_link"] = True
+        msgs.append(msg)
+
+
+def extract_individual_ids(chat_id):
+    # Extracting all the individuals id who are in conversation with the bot
+    individuals_id = []
+    bot = ChatBot.objects.get(chat__id=chat_id)
+    individuals = BotIndividual.objects.filter(bot__id=bot.bot.id)
+    for indi in individuals:
+        individuals_id.append(indi.individual.id)
+    return individuals_id
