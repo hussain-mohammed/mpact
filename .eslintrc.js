@@ -22,6 +22,12 @@ module.exports = {
         allow: ['info', 'warn', 'error'],
       },
     ],
+    'no-underscore-dangle': [
+      'error',
+      {
+        allow: ['_id']
+      }
+    ],
     'indent': ['error', 2],
   },
 };
