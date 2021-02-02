@@ -88,9 +88,9 @@ export default {
   }) {
     try {
       const response = await Api.post('flaggedmessages', {
-        roomId,
-        messageId,
-        firstName,
+        room_id: roomId,
+        message_id: messageId,
+        first_name: firstName,
         message,
       });
       return response;
@@ -99,9 +99,17 @@ export default {
       throw err;
     }
   },
-  async fetchFlaggedMessages() {
+  async fetchFlaggedMessages({
+    offset = 0,
+    limit = 50,
+  }) {
     try {
-      const response = await Api.get('flaggedmessages');
+      const response = await Api.get('flaggedmessages', {
+        params: {
+          offset,
+          limit,
+        },
+      });
       return response;
     } catch (err) {
       console.error(err);

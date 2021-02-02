@@ -3,6 +3,7 @@
     <div class='h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center
     d-flex justify-content-around'>
       <div class='text-truncate username text-left'>{{ userName }}</div>
+      <div class='bookmarks h-100' @click='navigateToBookmarks()' title='Bookmarks'></div>
       <div class='logout h-100' @click='logout()' title='logout'></div>
     </div>
     <div class='chat-contacts'>
@@ -38,8 +39,8 @@ export default {
     };
   },
   methods: {
-    async gotToBookmarks() {
-      this.$router.push('/bookmarks');
+    async navigateToBookmarks() {
+      this.$router.push('/flagged-messages');
     },
     async logout() {
       try {
@@ -99,7 +100,7 @@ export default {
     width: 85%;
   }
 
-  .bookmark {
+  .bookmarks {
     width: 15%;
     background-size: 20px;
     background-position: center;
