@@ -7,6 +7,7 @@ from constants import (
     DIALOGS_LIMIT,
     FIRST_NAME,
     GROUP_MSGS_FORBIDDEN,
+    ID,
     INDIVIDUAL,
     INVALID_CODE,
     IS_SUCCESS,
@@ -108,6 +109,7 @@ async def two_factor_auth(client, data):
 def ok_response(user_details, data):
     return {
         DATA: {
+            ID: user_details.id,
             FIRST_NAME: user_details.first_name,
             TOKEN: encode_token(
                 {
