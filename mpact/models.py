@@ -93,6 +93,7 @@ class FlaggedMessage(models.Model):
     first_name = models.TextField()
     message = models.TextField()
     date = models.DateTimeField(default=timezone.now)
+    is_group = models.BooleanField()
 
     def __str__(self):
         return f"{self.room_id} - {self.first_name} - {self.message}"

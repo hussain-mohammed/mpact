@@ -22,7 +22,8 @@ TWO_FA_ENABLED = "is_2FA_enabled"
 IS_SUCCESS = "is_success"
 INDIVIDUAL = "individual"
 TOKEN = "token"
-FLAGGED_MESSAGE = "flagged_message"
+FLAGGED_MESSAGE = "flagged_messages"
+ID = "id"
 
 DIALOGS_LIMIT = 25
 
