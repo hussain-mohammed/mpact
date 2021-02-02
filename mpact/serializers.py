@@ -58,5 +58,5 @@ class MessageSerializer(serializers.ModelSerializer):
 class FlaggedMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = FlaggedMessage
-        fields = ["id", "room_id", "message_id", "first_name", "message", "date"]
+        exclude = []
         read_only_fields = ["id", "date"]
