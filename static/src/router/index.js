@@ -23,7 +23,7 @@ const router = new Router({
     },
   },
   {
-    path: '/bookmarks',
+    path: '/flagged-messages',
     name: 'bookmarks',
     component: () => import('../views/Bookmarks.vue'),
     meta: {

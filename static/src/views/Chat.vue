@@ -18,7 +18,9 @@
 </template>
 
 <script>
+/* eslint-disable import/no-named-as-default-member */
 import MessageService from '../services/MessageService';
+import dateHelpers from '../utils/helpers/dateHelpers';
 import 'vue-advanced-chat/dist/vue-advanced-chat.css';
 
 const ChatWindow = () => import('vue-advanced-chat');
@@ -215,8 +217,8 @@ export default {
             id: d.id,
             content: d.message || '',
             sender_id: d.sender,
-            date: this.convertDate(d.date),
-            timestamp: this.convertTime(d.date),
+            date: dateHelpers.convertDate(d.date),
+            timestamp: dateHelpers.convertTime(d.date),
           });
         });
         if (groupView) {
@@ -272,8 +274,8 @@ export default {
               id: d.id,
               content: d.message || '',
               sender_id: d.sender,
-              date: this.convertDate(d.date),
-              timestamp: this.convertTime(d.date),
+              date: dateHelpers.convertDate(d.date),
+              timestamp: dateHelpers.convertTime(d.date),
             });
           });
           formattedRoomStructure.push({
@@ -333,8 +335,8 @@ export default {
               _id: d.id || '',
               content: d.message || '',
               sender_id: d.sender || '',
-              date: this.convertDate(d.date),
-              timestamp: this.convertTime(d.date),
+              date: dateHelpers.convertDate(d.date),
+              timestamp: dateHelpers.convertTime(d.date),
               username: this.roomName,
             });
           });
@@ -366,13 +368,14 @@ export default {
         });
         if (data && data.status === 200) {
           this.messagesLoaded = false;
+          const date = new Date();
           const newMessages = [...this.messages, {
             _id: Math.random().toString(32).slice(2),
             individual: roomId,
             content,
             sender_id: this.currentUserId,
-            date: this.convertDate(new Date()),
-            timestamp: this.convertTime(new Date()),
+            date: dateHelpers.convertDate(date),
+            timestamp: dateHelpers.convertTime(date),
             username: this.sender,
           }];
           this.messages = newMessages;
@@ -388,19 +391,6 @@ export default {
       this.messagesLoaded = false;
       this.lastMessage = null;
       this.offset = 0;
-    },
-    convertDate(date) {
-      const dateString = new Date(date);
-      let month = `${dateString.getMonth() + 1}`;
-      let day = `${dateString.getDate()}`;
-      const year = dateString.getFullYear();
-      if (month.length < 2) month = `0${month}`;
-      if (day.length < 2) day = `0${day}`;
-      return [day, month, year].join('-');
-    },
-    convertTime(time) {
-      const timeString = new Date(time);
-      return `${timeString.getHours()}:${timeString.getMinutes()}`;
     },
   },
 };
