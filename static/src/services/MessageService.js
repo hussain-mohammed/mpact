@@ -85,6 +85,7 @@ export default {
     messageId,
     firstName,
     message,
+    isGroup,
   }) {
     try {
       const response = await Api.post('flaggedmessages', {
@@ -92,6 +93,7 @@ export default {
         message_id: messageId,
         first_name: firstName,
         message,
+        is_group: isGroup,
       });
       return response;
     } catch (err) {
@@ -116,7 +118,7 @@ export default {
       throw err;
     }
   },
-  async deleteFlaggedMessage({
+  async unFlagMessage({
     id,
   }) {
     try {

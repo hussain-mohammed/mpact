@@ -10,7 +10,7 @@
         <chat-window height='100vh' class='chat-widget-1' :currentUserId='currentUserId'
         :rooms='rooms' :messages='messages' :single-room='hideSideNav'
          :messages-loaded='messagesLoaded' @fetch-messages='loadOldMessages($event)'
-         @send-message='sendMessages($event)' :message-actions='messageActions'
+         @send-message='sendMessage($event)' :message-actions='messageActions'
          @message-action-handler='messageActionHandler($event)'/>
       </div>
     </div>
@@ -101,9 +101,10 @@ export default {
       try {
         const params = {
           roomId,
-          messageId: message.id,
+          messageId: message._id,
           firstName: message.sender_id,
           message: message.content,
+          isGroup: this.groupView,
         };
         await MessageService.flagMessage(params);
       } catch (err) {
@@ -114,7 +115,7 @@ export default {
       try {
         const params = {
           roomId,
-          id: message.id,
+          id: message._id,
           content: message.content,
         };
         await MessageService.editMessage(params);
@@ -133,7 +134,7 @@ export default {
     async deleteMessage({ message }) {
       try {
         const params = {
-          id: message.id,
+          id: message._id,
         };
         await MessageService.deleteMessage(params);
       } catch (err) {
@@ -214,7 +215,6 @@ export default {
           });
           formattedMessages.push({
             _id: d.id,
-            id: d.id,
             content: d.message || '',
             sender_id: d.sender,
             date: dateHelpers.convertDate(d.date),
@@ -271,7 +271,6 @@ export default {
             }
             formattedMessages.push({
               _id: d.id,
-              id: d.id,
               content: d.message || '',
               sender_id: d.sender,
               date: dateHelpers.convertDate(d.date),
@@ -353,24 +352,25 @@ export default {
         console.error(err);
       }
     },
-    async sendMessages({
+    async sendMessage({
       roomId,
       content,
       file,
       replyMessage,
     }) {
       try {
-        const data = await MessageService.addNewMessage({
+        const response = await MessageService.addNewMessage({
           roomId,
           content,
           file,
           replyMessage,
         });
-        if (data && data.status === 200) {
+        if (response && response.status === 200) {
           this.messagesLoaded = false;
-          const date = new Date();
+          const { message } = response.data;
+          const { date } = message;
           const newMessages = [...this.messages, {
-            _id: Math.random().toString(32).slice(2),
+            _id: message.id,
             individual: roomId,
             content,
             sender_id: this.currentUserId,
