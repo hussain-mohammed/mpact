@@ -4,8 +4,11 @@ from constants import (
     BOT_TOKEN,
     CODE,
     DATA,
+    DELETE_FAIL,
+    DELETE_SUCCESS,
     DIALOGS_LIMIT,
     FIRST_NAME,
+    FLAGGED_MESSAGE,
     GROUP_MSGS_FORBIDDEN,
     ID,
     INDIVIDUAL,
@@ -20,6 +23,7 @@ from constants import (
     PHONE,
     PHONE_CODE_HASH,
     PHONE_NOT_REGISTERED,
+    RECORD_NF,
     STATUS,
     TELEGRAM_API_HASH,
     TELEGRAM_API_ID,
@@ -40,8 +44,8 @@ from telethon.errors import (
 from telethon.tl.types import InputPeerUser
 from utils import encode_token, get_or_none
 
-from .models import BotIndividual, ChatBot, Individual, Message
-from .serializers import ChatBotSerializer, MessageSerializer
+from .models import BotIndividual, ChatBot, FlaggedMessage, Individual, Message
+from .serializers import ChatBotSerializer, FlaggedMessageSerializer, MessageSerializer
 
 
 @asynccontextmanager
@@ -290,3 +294,74 @@ def extract_individual_ids(chat_id):
     for indi in individuals:
         individuals_id.append(indi.individual.id)
     return individuals_id
+
+
+async def get_flagged_messages(phone, limit, offset):
+    """
+    Retrieve flagged messages
+    """
+    async with client_context(phone) as client:
+        if await client.is_user_authorized():
+            if limit and offset:
+                data = FlaggedMessage.objects.all().order_by("-date")[
+                    int(offset) : int(offset) + int(limit)
+                ]
+            elif limit:
+                data = FlaggedMessage.objects.all().order_by("-date")[: int(limit)]
+            else:
+                data = FlaggedMessage.objects.all().order_by("-date")
+            serializer = FlaggedMessageSerializer(data, many=True)
+            return {
+                DATA: {FLAGGED_MESSAGE: serializer.data[::-1], IS_SUCCESS: True},
+                STATUS: status.HTTP_200_OK,
+            }
+        return NOT_AUTHORIZED
+
+
+async def create_flagged_message(phone, data):
+    """
+    Saves the flagged message
+    """
+    async with client_context(phone) as client:
+        if await client.is_user_authorized():
+            serializer = FlaggedMessageSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                result = {
+                    DATA: {FLAGGED_MESSAGE: serializer.data, IS_SUCCESS: True},
+                    STATUS: status.HTTP_200_OK,
+                }
+            else:
+                result = {
+                    DATA: {MESSAGE: serializer.errors, IS_SUCCESS: False},
+                    STATUS: status.HTTP_400_BAD_REQUEST,
+                }
+
+            return result
+        return NOT_AUTHORIZED
+
+
+async def delete_flagged_message(phone, id):
+    """
+    Deletes the flagged message
+    """
+    async with client_context(phone) as client:
+        if await client.is_user_authorized():
+            try:
+                flagged_message = FlaggedMessage.objects.get(pk=id)
+            except FlaggedMessage.DoesNotExist:
+                return {
+                    DATA: {MESSAGE: RECORD_NF, IS_SUCCESS: False},
+                    STATUS: status.HTTP_404_NOT_FOUND,
+                }
+
+            if flagged_message.delete():
+                return {
+                    DATA: {MESSAGE: DELETE_SUCCESS, IS_SUCCESS: True},
+                    STATUS: status.HTTP_200_OK,
+                }
+            return {
+                DATA: {MESSAGE: DELETE_FAIL, IS_SUCCESS: False},
+                STATUS: status.HTTP_400_BAD_REQUEST,
+            }
+        return NOT_AUTHORIZED
