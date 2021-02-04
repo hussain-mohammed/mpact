@@ -2,12 +2,43 @@
   <div class='vw-100 vh-100'>
     <div class='row m-0 p-0'>
       <div class='col-10 p-0'>
-        <chat-window height='100vh' class='bookmarks-widget-1' :currentUserId='currentUserId' :messages='bookmarks'
-          :single-room='true' :rooms-loaded='true' :rooms='rooms' :text-messages="textMessages"
-          :show-footer='false' :show-emojis='false' :show-reaction-emojis='false' :messages-loaded='bookmarksLoaded'
-          @fetch-messages='fetchMoreBookmarks($event)' :message-actions='messageActions'
-          :styles='styles' :show-new-messages-divider='false'
-          @message-action-handler='messageActionHandler($event)'/>
+        <chat-window height='100vh' class='bookmarks-widget-1' v-bind='chatProps'
+          @fetch-messages='fetchMoreBookmarks($event)'>
+          <template #message='{message}'>
+            <div :id='message._id' class='message-container'>
+              <div class='message-card cursor__pointer'>
+                <div class='username'>
+                  <router-link :to="{path: '/chat',
+                  query: { roomId: message.roomId, messageId: message.messageId }}" target='_blank' exact-path>
+                    <span>
+                      {{message.firstName}}
+                    </span>
+                  </router-link>
+                </div>
+                <div>
+                  <router-link :to="{path: '/chat',
+                  query: { roomId: message.roomId, messageId: message.messageId }}" target='_blank' exact-path>
+                    <span class='message-content cursor__pointer'>
+                      {{message.content}}
+                    </span>
+                  </router-link>
+                </div>
+                <div class='text-timestamp'>
+                  <span>{{message.timestamp}}</span>
+                </div>
+                <div class='svg-button message-options cursor__pointer' :data-id='message._id'
+                  @click='unFlagMessage({id: message._id})'>
+                  <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor'
+                    viewBox='0 0 16 16'>
+                    <path d='M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1
+                    .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5
+                    0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z' />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </template>
+        </chat-window>
       </div>
     </div>
   </div>
@@ -25,75 +56,64 @@ export default {
   },
   data() {
     return {
-      currentUserId: 1,
-      bookmarks: [],
-      rooms: [],
-      messages: [],
       limit: 50,
       offset: 0,
       lastMessage: null,
-      bookmarksLoaded: false,
-      messageActions: [
-        {
-          name: 'unFlagMessage',
-          title: 'Remove Flag',
+      chatProps: {
+        currentUserId: 1,
+        rooms: [],
+        messages: [],
+        singleRoom: true,
+        roomsLoaded: true,
+        textMessages: {
+          ROOMS_EMPTY: 'No flagged messages to show',
+          ROOM_EMPTY: 'No flagged messages to show',
+          MESSAGES_EMPTY: 'No flagged messages to show',
+          CONVERSATION_STARTED: '',
         },
-      ],
-      textMessages: {
-        ROOMS_EMPTY: 'No flagged messages to show',
-        ROOM_EMPTY: 'No flagged messages to show',
-        MESSAGES_EMPTY: 'No flagged messages to show',
-        CONVERSATION_STARTED: '',
-      },
-      styles: {
+        showFooter: false,
+        showEmojis: false,
+        showReactionEmojis: false,
+        messagesLoaded: false,
+        styles: {},
+        showNewMessagesDivider: false,
       },
     };
   },
   mounted() {
     try {
+      this.chatProps.currentUserId = localStorage.getItem('userId');
       this.fetchBookmarks();
     } catch (err) {
       console.error(err);
     }
   },
   methods: {
-    async messageActionHandler({ roomId, action, message }) {
-      try {
-        const options = { roomId, message };
-        switch (action.name) {
-        case 'unFlagMessage':
-          this.unFlagMessage(options);
-          break;
-        default:
-          break;
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    },
     async fetchBookmarks() {
       try {
         const result = await MessageService.fetchFlaggedMessages({});
         if (result && result.data.flagged_messages) {
-          this.currentUserId = 1512271983;
           const formattedMessages = [];
           result.data.flagged_messages.forEach((d) => {
             formattedMessages.push({
               _id: d.id,
+              messageId: d.message_id,
+              firstName: d.first_name || '',
               content: d.message || '',
               sender_id: d.sender || 1,
               date: convertDate(d.date),
               timestamp: convertTime(d.date),
+              roomId: d.room_id,
             });
           });
-          this.bookmarks = formattedMessages;
-          this.rooms = [{
+          this.chatProps.messages = formattedMessages;
+          this.chatProps.rooms = [{
             roomId: 1,
             roomName: 'Bookmarks',
             users: [],
           }];
           if (formattedMessages.length < 50) {
-            this.bookmarksLoaded = true;
+            this.chatProps.messagesLoaded = true;
           }
         }
       } catch (err) {
@@ -120,36 +140,38 @@ export default {
           result.data.flagged_messages.forEach((d) => {
             formattedMessages.push({
               _id: d.id,
+              messageId: d.message_id,
+              firstName: d.first_name || '',
               content: d.message || '',
               sender_id: d.sender || 1,
               date: convertDate(d.date),
               timestamp: convertTime(d.date),
+              roomId: d.room_id,
             });
           });
-          this.bookmarks = [formattedMessages, ...this.bookmarks];
-          this.rooms = [{
+          this.chatProps.messages = [formattedMessages, ...this.bookmarks];
+          this.chatProps.rooms = [{
             roomId: 1,
             roomName: 'Bookmarks',
             users: [],
           }];
           if (formattedMessages.length < 50) {
-            this.bookmarksLoaded = true;
+            this.chatProps.messagesLoaded = true;
           }
         }
       } catch (err) {
         console.error(err);
       }
     },
-    async unFlagMessage({ message }) {
+    async unFlagMessage({ id }) {
       try {
-        const id = message._id;
         const params = {
           id,
         };
         const response = await MessageService.unFlagMessage(params);
         if (response && response.data.is_success) {
-          const updatedBookmarks = this.bookmarks.filter((bookmark) => bookmark._id !== id);
-          this.bookmarks = updatedBookmarks;
+          const updatedMessages = this.messages.filter((message) => message._id !== id);
+          this.chatProps.messages = updatedMessages;
         }
       } catch (err) {
         console.error(err);
@@ -162,4 +184,73 @@ export default {
 .row {
   justify-content: center;
 }
+
+.message-container {
+  position: relative;
+  padding: 2px 10px;
+  align-items: end;
+  min-width: 100px;
+  margin: 0 0 0.25rem;
+  box-sizing: content-box;
+}
+
+.message-card {
+  background: var(--chat-message-bg-color);
+  color: var(--chat-message-color);
+  border-radius: 8px;
+  font-size: 14px;
+  padding: 6px 9px 3px;
+  white-space: normal;
+  max-width: 100%;
+  transition-property: box-shadow, opacity;
+  transition: box-shadow .28s cubic-bezier(.4, 0, .2, 1);
+  will-change: box-shadow;
+  box-shadow: 0 1px 1px -1px rgb(0 0 0 / 10%), 0 1px 1px -1px rgb(0 0 0 / 11%),
+    0 1px 2px -1px rgb(0 0 0 / 11%);
+}
+
+.username {
+  padding: 4px 0 2px;
+}
+
+.username a {
+  color: #91ab01;
+}
+
+.text-timestamp {
+  font-size: 10px;
+  color: var(--chat-message-color-timestamp);
+  text-align: right;
+}
+
+.options-container {
+  position: absolute;
+  top: 2px;
+  right: 10px;
+  height: 40px;
+  width: 70px;
+  overflow: hidden;
+  z-index: 1;
+  border-top-right-radius: 8px;
+}
+
+.message-content a {
+  color: #303030;
+}
+
+.message-options {
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 7px;
+  right: 12px;
+}
+
+.message-options svg {
+  height: 1.25rem;
+  width: 1.25rem;
+  padding: 1px;
+  margin: 0;
+}
+
 </style>

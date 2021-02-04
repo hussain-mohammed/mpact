@@ -2,7 +2,7 @@
   <div class='vw-100 vh-100'>
     <div class='row m-0 p-0'>
       <div class='col-2 p-0 z-index__25'>
-        <side-nav :userName='userName' :contactsList='contactsList'
+        <side-nav :username='username' :contacts='contacts'
           @getIndividualMessages='getIndividualMessages($event)'
           @getGroupMessages='getGroupMessages($event)' />
       </div>
@@ -33,17 +33,18 @@ export default {
     SideNav,
   },
   mounted() {
-    this.userName = localStorage.getItem('username') || '';
+    this.username = localStorage.getItem('username') || '';
+    this.lastMessage = this.$route.query.messageId || null;
+    this.selectedRoom = this.$route.query.roomId || null;
     this.getContacts();
-    this.lastMessage = null;
   },
   data() {
     return {
-      userName: '',
+      username: '',
       rooms: [],
       messages: [],
       currentUserId: 1,
-      contactsList: null,
+      contacts: null,
       messagesLoaded: false,
       hideSideNav: true,
       roomName: '',
@@ -144,7 +145,7 @@ export default {
     async getContacts() {
       try {
         const data = await this.$http.get('/dialogs');
-        this.contactsList = data.data.dialogs;
+        this.contacts = data.data.dialogs;
       } catch (err) {
         console.error(err);
       }

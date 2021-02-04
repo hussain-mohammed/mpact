@@ -2,12 +2,12 @@
   <div class='side-nav h-100'>
     <div class='h3 title w-100 text-center bg-dark text-white px-3 m-0 d-flex align-items-center
     d-flex justify-content-around'>
-      <div class='text-truncate username text-left'>{{ userName }}</div>
+      <div class='text-truncate username text-left'>{{ username }}</div>
       <div class='bookmarks h-100' @click='navigateToBookmarks()' title='Bookmarks'></div>
       <div class='logout h-100' @click='logout()' title='logout'></div>
     </div>
     <div class='chat-contacts'>
-      <div class='side-nav-row mt-2' v-for='(mainObj, index) in contactsList' :key='index'>
+      <div class='side-nav-row mt-2' v-for='(mainObj, index) in contacts' :key='index'>
         <div class='w-100 bg-telegram__primary text-white d-flex justify-content-between'>
           <div class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0'
             @click="$emit('getGroupMessages', { roomName: mainObj.chat.title, roomId: mainObj.chat.id })">
@@ -32,7 +32,7 @@
 <script>
 export default {
   name: 'side-nav',
-  props: ['userName', 'contactsList'],
+  props: ['username', 'contacts'],
   data() {
     return {
       data: {},
