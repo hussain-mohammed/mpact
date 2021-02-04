@@ -132,6 +132,7 @@ export default {
             this.showLoginPage = false;
             this.nextButtonValidation = false;
             this.show2FaPage = true;
+            localStorage.setItem('userId', data.data.id || '');
             localStorage.setItem('username', data.data.first_name || '');
             localStorage.setItem('Token', data.data.token || '');
             if (!is2FAEnabled) {
@@ -154,6 +155,7 @@ export default {
           });
           if (data && data.data && data.data.is_success) {
             localStorage.removeItem('username');
+            localStorage.setItem('userId', data.data.id || '');
             localStorage.setItem('username', data.data.first_name || '');
             localStorage.setItem('Token', data.data.token || '');
             this.$router.push('/chat');
