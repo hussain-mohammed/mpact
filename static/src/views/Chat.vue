@@ -11,16 +11,17 @@
           :message-actions='messageActions' @fetch-messages='loadOldMessages($event)'
           @send-message='sendMessage($event)' @message-action-handler='messageActionHandler($event)'>
           <template #dropdown-icon>
-            <svg xmlns="http://www.w3.org/2000/svg" width='16' height='16' fill="currentColor" viewBox="0 0 16 16"
-              class="svg-button">
-              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5
-              0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'
+            class='svg-button'>
+              <path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5
+              0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z' />
             </svg>
-            <!-- <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="svg-button"
-              viewBox="0 0 16 16">
-              <path
-                d="M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
-            </svg> -->
+          </template>
+          <template #checkmark-icon>
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor'
+            class='svg-button bookmark' viewBox='0 0 16 16'>
+              <path d='M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z'/>
+            </svg>
           </template>
         </chat-window>
       </div>
@@ -49,8 +50,8 @@ export default {
     this.selectedRoom = this.$route.query.roomId || '';
     this.groupBookmark = this.$route.query.isGroup === 'true' || false;
     this.groupId = this.$route.query.groupId || null;
-    const selectedDiv = document.querySelector(`div[data-id="${this.selectedRoom}"]`);
-    const groupButton = document.querySelector(`button[data-id="${this.groupId}"]`);
+    const selectedDiv = document.querySelector(`div[data-id='${this.selectedRoom}']`);
+    const groupButton = document.querySelector(`button[data-id='${this.groupId}']`);
     if (this.groupBookmark && (this.groupId === this.selectedRoom)) {
       if (selectedDiv) {
         selectedDiv.click();
@@ -139,7 +140,21 @@ export default {
           groupId: message.groupId,
           isGroup: this.groupView,
         };
-        await MessageService.flagMessage(params);
+        const result = await MessageService.flagMessage(params);
+        if (result && result.data.is_success) {
+          const updatedMessages = this.messages.map((message) => {
+            if (message._id === params.messageId) {
+              const updatedMessage = {
+                ...message,
+                isFlagged: true,
+                saved: true,
+              };
+              return updatedMessage;
+            }
+            return message;
+          });
+          this.messages = updatedMessages;
+        }
       } catch (err) {
         console.error(err);
       }
@@ -245,6 +260,7 @@ export default {
             date: dateHelpers.convertDate(d.date),
             timestamp: dateHelpers.convertTime(d.date),
             isFlagged: d.is_flagged,
+            saved: d.is_flagged,
             groupId: this.groupId,
           });
         });
@@ -304,6 +320,7 @@ export default {
               date: dateHelpers.convertDate(d.date),
               timestamp: dateHelpers.convertTime(d.date),
               isFlagged: d.is_flagged,
+              saved: d.is_flagged,
               groupId,
             });
           });
@@ -369,6 +386,7 @@ export default {
               timestamp: dateHelpers.convertTime(d.date),
               username: this.roomName,
               isFlagged: d.is_flagged,
+              saved: d.is_flagged,
               groupId: this.groupId,
             });
           });
@@ -432,5 +450,12 @@ export default {
 <style scoped>
 .svg-button {
   background: var(--chat-message-bg-color-me) !important;
+}
+
+.bookmark {
+  position: absolute;
+  left: 22px;
+  width: 12px;
+  height: 12px;
 }
 </style>
