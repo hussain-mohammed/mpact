@@ -2,16 +2,27 @@
   <div class='vw-100 vh-100'>
     <div class='row m-0 p-0'>
       <div class='col-2 p-0 z-index__25'>
-        <side-nav :username='username' :contacts='contacts'
-          @getIndividualMessages='getIndividualMessages($event)'
+        <side-nav :username='username' :contacts='contacts' @getIndividualMessages='getIndividualMessages($event)'
           @getGroupMessages='getGroupMessages($event)' />
       </div>
       <div class='col-10 p-0'>
-        <chat-window height='100vh' class='chat-widget-1' :currentUserId='currentUserId'
-        :rooms='rooms' :messages='messages' :single-room='hideSideNav'
-         :messages-loaded='messagesLoaded' @fetch-messages='loadOldMessages($event)'
-         @send-message='sendMessage($event)' :message-actions='messageActions'
-         @message-action-handler='messageActionHandler($event)'/>
+        <chat-window height='100vh' class='chat-widget-1' :currentUserId='currentUserId' :rooms='rooms'
+          :messages='messages' :single-room='hideSideNav' :messages-loaded='messagesLoaded'
+          :message-actions='messageActions' @fetch-messages='loadOldMessages($event)'
+          @send-message='sendMessage($event)' @message-action-handler='messageActionHandler($event)'>
+          <template #dropdown-icon>
+            <svg xmlns="http://www.w3.org/2000/svg" width='16' height='16' fill="currentColor" viewBox="0 0 16 16"
+              class="svg-button">
+              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5
+              0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+            </svg>
+            <!-- <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="svg-button"
+              viewBox="0 0 16 16">
+              <path
+                d="M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+            </svg> -->
+          </template>
+        </chat-window>
       </div>
     </div>
   </div>
@@ -32,11 +43,22 @@ export default {
     ChatWindow,
     SideNav,
   },
-  mounted() {
+  async mounted() {
+    await this.getContacts();
     this.username = localStorage.getItem('username') || '';
-    this.lastMessage = this.$route.query.messageId || null;
-    this.selectedRoom = this.$route.query.roomId || null;
-    this.getContacts();
+    this.selectedRoom = this.$route.query.roomId || '';
+    this.groupBookmark = this.$route.query.isGroup === 'true' || false;
+    this.groupId = this.$route.query.groupId || null;
+    const selectedDiv = document.querySelector(`div[data-id="${this.selectedRoom}"]`);
+    const groupButton = document.querySelector(`button[data-id="${this.groupId}"]`);
+    if (this.groupBookmark && (this.groupId === this.selectedRoom)) {
+      if (selectedDiv) {
+        selectedDiv.click();
+      }
+    } else if (groupButton && selectedDiv) {
+      groupButton.click();
+      selectedDiv.click();
+    }
   },
   data() {
     return {
@@ -44,12 +66,13 @@ export default {
       rooms: [],
       messages: [],
       currentUserId: 1,
-      contacts: null,
+      contacts: [],
       messagesLoaded: false,
       hideSideNav: true,
       roomName: '',
       limit: 50,
       groupView: true,
+      groupId: null,
       offset: 0,
       lastMessage: null,
       messageActions: [
@@ -98,6 +121,14 @@ export default {
         console.error(err);
       }
     },
+    async getContacts() {
+      try {
+        const data = await this.$http.get('/dialogs');
+        this.contacts = data.data.dialogs;
+      } catch (err) {
+        console.error(err);
+      }
+    },
     async flagMessage({ roomId, message }) {
       try {
         const params = {
@@ -105,6 +136,7 @@ export default {
           messageId: message._id,
           firstName: message.sender_id,
           message: message.content,
+          groupId: message.groupId,
           isGroup: this.groupView,
         };
         await MessageService.flagMessage(params);
@@ -138,14 +170,6 @@ export default {
           id: message._id,
         };
         await MessageService.deleteMessage(params);
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    async getContacts() {
-      try {
-        const data = await this.$http.get('/dialogs');
-        this.contacts = data.data.dialogs;
       } catch (err) {
         console.error(err);
       }
@@ -220,6 +244,8 @@ export default {
             sender_id: d.sender,
             date: dateHelpers.convertDate(d.date),
             timestamp: dateHelpers.convertTime(d.date),
+            isFlagged: d.is_flagged,
+            groupId: this.groupId,
           });
         });
         if (groupView) {
@@ -242,6 +268,7 @@ export default {
     async getIndividualMessages({
       roomName,
       roomId,
+      groupId,
     }) {
       try {
         this.messagesLoaded = false;
@@ -276,6 +303,8 @@ export default {
               sender_id: d.sender,
               date: dateHelpers.convertDate(d.date),
               timestamp: dateHelpers.convertTime(d.date),
+              isFlagged: d.is_flagged,
+              groupId,
             });
           });
           formattedRoomStructure.push({
@@ -295,6 +324,7 @@ export default {
       roomId,
       lazy = false,
     }) {
+      this.groupId = roomId;
       try {
         const {
           limit,
@@ -338,6 +368,8 @@ export default {
               date: dateHelpers.convertDate(d.date),
               timestamp: dateHelpers.convertTime(d.date),
               username: this.roomName,
+              isFlagged: d.is_flagged,
+              groupId: this.groupId,
             });
           });
           formattedRoomStructure.push({
@@ -377,6 +409,7 @@ export default {
             sender_id: this.currentUserId,
             date: dateHelpers.convertDate(date),
             timestamp: dateHelpers.convertTime(date),
+            isFlagged: false,
             username: this.sender,
           }];
           this.messages = newMessages;
@@ -396,3 +429,8 @@ export default {
   },
 };
 </script>
+<style scoped>
+.svg-button {
+  background: var(--chat-message-bg-color-me) !important;
+}
+</style>
