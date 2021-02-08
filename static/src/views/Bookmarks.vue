@@ -8,16 +8,18 @@
             <div :id='message._id' class='message-container'>
               <div class='message-card cursor__pointer'>
                 <div class='username'>
-                  <router-link :to="{path: '/chat',
-                  query: { roomId: message.roomId, messageId: message.messageId }}" target='_blank' exact-path>
+                  <router-link target='_blank' exact-path :to="{path: '/chat',
+                  query: { roomId: message.roomId, messageId: message.messageId, isGroup:
+                  message.isGroup, groupId: message.groupId }}">
                     <span>
                       {{message.firstName}}
                     </span>
                   </router-link>
                 </div>
                 <div>
-                  <router-link :to="{path: '/chat',
-                  query: { roomId: message.roomId, messageId: message.messageId }}" target='_blank' exact-path>
+                  <router-link  target='_blank' exact-path :to="{path: '/chat',
+                  query: { roomId: message.roomId, messageId: message.messageId, isGroup:
+                  message.isGroup, groupId: message.groupId || null, }}">
                     <span class='message-content cursor__pointer'>
                       {{message.content}}
                     </span>
@@ -104,6 +106,8 @@ export default {
               date: convertDate(d.date),
               timestamp: convertTime(d.date),
               roomId: d.room_id,
+              isGroup: d.is_group || false,
+              groupId: d.group_id || null,
             });
           });
           this.chatProps.messages = formattedMessages;
@@ -147,6 +151,8 @@ export default {
               date: convertDate(d.date),
               timestamp: convertTime(d.date),
               roomId: d.room_id,
+              isGroup: d.is_group || false,
+              groupId: d.group_id || null,
             });
           });
           this.chatProps.messages = [formattedMessages, ...this.bookmarks];
@@ -170,7 +176,7 @@ export default {
         };
         const response = await MessageService.unFlagMessage(params);
         if (response && response.data.is_success) {
-          const updatedMessages = this.messages.filter((message) => message._id !== id);
+          const updatedMessages = this.chatProps.messages.filter((message) => message._id !== id);
           this.chatProps.messages = updatedMessages;
         }
       } catch (err) {
