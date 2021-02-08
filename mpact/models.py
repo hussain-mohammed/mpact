@@ -99,5 +99,8 @@ class FlaggedMessage(models.Model):
     # group_id is needed to link the flagged message screen to individual chat
     group_id = models.IntegerField(null=True)
 
+    class Meta:
+        unique_together = ("room_id", "message_id")
+
     def __str__(self):
         return f"{self.room_id} - {self.first_name} - {self.message}"
