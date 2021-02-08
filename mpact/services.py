@@ -347,7 +347,7 @@ async def create_flagged_message(phone, data):
                 serializer.save()
 
                 # If the message is from individual chat then flag it
-                if data["is_group"] == "False":
+                if data["is_group"] == False:
                     try:
                         message = Message.objects.get(pk=data["message_id"])
                         message.is_flagged = True
