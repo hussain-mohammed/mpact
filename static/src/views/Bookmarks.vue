@@ -10,7 +10,7 @@
                 <div class='username'>
                   <router-link target='_blank' exact-path :to="{path: '/chat',
                   query: { roomId: message.roomId, messageId: message.messageId, isGroup:
-                  message.isGroup, groupId: message.groupId }}">
+                  message.isGroup, groupId: message.groupId || null}}">
                     <span>
                       {{message.firstName}}
                     </span>
@@ -49,6 +49,7 @@
 import MessageService from '../services/MessageService';
 import { convertDate, convertTime } from '../utils/helpers';
 import 'vue-advanced-chat/dist/vue-advanced-chat.css';
+import '../styles/message.css';
 
 const ChatWindow = () => import('vue-advanced-chat');
 export default {
@@ -186,77 +187,3 @@ export default {
   },
 };
 </script>
-<style scoped>
-.row {
-  justify-content: center;
-}
-
-.message-container {
-  position: relative;
-  padding: 2px 10px;
-  align-items: end;
-  min-width: 100px;
-  margin: 0 0 0.25rem;
-  box-sizing: content-box;
-}
-
-.message-card {
-  background: var(--chat-message-bg-color);
-  color: var(--chat-message-color);
-  border-radius: 8px;
-  font-size: 14px;
-  padding: 6px 9px 3px;
-  white-space: normal;
-  max-width: 100%;
-  transition-property: box-shadow, opacity;
-  transition: box-shadow .28s cubic-bezier(.4, 0, .2, 1);
-  will-change: box-shadow;
-  box-shadow: 0 1px 1px -1px rgb(0 0 0 / 10%), 0 1px 1px -1px rgb(0 0 0 / 11%),
-    0 1px 2px -1px rgb(0 0 0 / 11%);
-}
-
-.username {
-  padding: 4px 0 2px;
-}
-
-.username a {
-  color: #91ab01;
-}
-
-.text-timestamp {
-  font-size: 10px;
-  color: var(--chat-message-color-timestamp);
-  text-align: right;
-}
-
-.options-container {
-  position: absolute;
-  top: 2px;
-  right: 10px;
-  height: 40px;
-  width: 70px;
-  overflow: hidden;
-  z-index: 1;
-  border-top-right-radius: 8px;
-}
-
-.message-content a {
-  color: #303030;
-}
-
-.message-options {
-  background: #fff;
-  border-radius: 50%;
-  position: absolute;
-  top: 7px;
-  right: 12px;
-}
-
-.message-options svg {
-  height: 1.25rem;
-  width: 1.25rem;
-  padding: 1px;
-  margin: 0;
-}
-
-</style>
