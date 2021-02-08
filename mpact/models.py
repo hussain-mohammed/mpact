@@ -95,6 +95,9 @@ class FlaggedMessage(models.Model):
     message = models.TextField()
     date = models.DateTimeField(default=timezone.now)
     is_group = models.BooleanField()
+    # If the message is being flagged from individual chat,
+    # group_id is needed to link the flagged message screen to individual chat
+    group_id = models.IntegerField(null=True)
 
     def __str__(self):
         return f"{self.room_id} - {self.first_name} - {self.message}"
