@@ -51,8 +51,8 @@ class ChatBotSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ["id", "individual", "sender", "message", "date"]
-        read_only_fields = ["id", "date"]
+        exclude = []
+        read_only_fields = ["id", "date", "is_flagged"]
 
 
 class FlaggedMessageSerializer(serializers.ModelSerializer):

@@ -82,6 +82,7 @@ class Message(models.Model):
     sender = models.IntegerField()
     message = models.TextField(null=True)
     date = models.DateTimeField(default=timezone.now)
+    is_flagged = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.individual.first_name} - {self.sender}"
