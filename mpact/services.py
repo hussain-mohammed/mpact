@@ -184,7 +184,11 @@ async def send_msg(phone, data):
                 else:
                     receiver = await client.get_entity(int(data[INDIVIDUAL]))
                     msg_inst = await bot.send_message(receiver, data[MESSAGE])
-                    sent_msg = {"id": msg_inst.id, "sender": current_bot.username}
+                    sent_msg = {
+                        "id": msg_inst.id,
+                        "sender": current_bot.username,
+                        "date": msg_inst.date,
+                    }
 
             return {
                 DATA: {MESSAGE: sent_msg, IS_SUCCESS: True},
@@ -243,20 +247,22 @@ async def get_chat_msg(phone, chat_id, limit, offset):
             await client.get_dialogs(limit=DIALOGS_LIMIT)
             msgs = []
             individuals_id = extract_individual_ids(chat_id)
+            flagged_msgs_id = extract_flagged_msgs_is(chat_id)
+
             try:
                 if limit and offset:
                     async for message in client.iter_messages(
                         chat_id, limit=int(limit), offset_id=int(offset)
                     ):
-                        extract_messages(message, msgs, individuals_id)
+                        extract_messages(message, msgs, individuals_id, flagged_msgs_id)
                 elif limit:
                     async for message in client.iter_messages(
                         chat_id, limit=int(limit)
                     ):
-                        extract_messages(message, msgs, individuals_id)
+                        extract_messages(message, msgs, individuals_id, flagged_msgs_id)
                 else:
                     async for message in client.iter_messages(chat_id):
-                        extract_messages(message, msgs, individuals_id)
+                        extract_messages(message, msgs, individuals_id, flagged_msgs_id)
             except ValueError:
                 return {
                     DATA: {
@@ -272,7 +278,7 @@ async def get_chat_msg(phone, chat_id, limit, offset):
         return NOT_AUTHORIZED
 
 
-def extract_messages(message, msgs, individuals_id):
+def extract_messages(message, msgs, individuals_id, flagged_msgs_id):
     if message.message:
         msg = {
             "id": message.id,
@@ -280,9 +286,12 @@ def extract_messages(message, msgs, individuals_id):
             MESSAGE: message.text,
             "date": message.date,
             "is_link": False,
+            "is_flagged": False,
         }
         if message.sender.id in individuals_id:
             msg["is_link"] = True
+        if message.id in flagged_msgs_id:
+            msg["is_flagged"] = True
         msgs.append(msg)
 
 
@@ -294,6 +303,15 @@ def extract_individual_ids(chat_id):
     for indi in individuals:
         individuals_id.append(indi.individual.id)
     return individuals_id
+
+
+def extract_flagged_msgs_is(chat_id):
+    # Extracting flagged message's id of a particular chat
+    flagged_msgs_id = []
+    flagged_msgs = FlaggedMessage.objects.filter(room_id=chat_id)
+    for message in flagged_msgs:
+        flagged_msgs_id.append(message.message_id)
+    return flagged_msgs_id
 
 
 async def get_flagged_messages(phone, limit, offset):
@@ -327,6 +345,15 @@ async def create_flagged_message(phone, data):
             serializer = FlaggedMessageSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
+
+                # If the message is from individual chat then flag it
+                if data["is_group"] == "False":
+                    try:
+                        message = Message.objects.get(pk=data["message_id"])
+                        message.is_flagged = True
+                        message.save()
+                    except Message.DoesNotExist as does_not_exist:
+                        logger.exception(does_not_exist)
                 result = {
                     DATA: {FLAGGED_MESSAGE: serializer.data, IS_SUCCESS: True},
                     STATUS: status.HTTP_200_OK,
