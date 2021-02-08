@@ -85,6 +85,7 @@ export default {
     messageId,
     firstName,
     message,
+    groupId,
     isGroup,
   }) {
     try {
@@ -93,6 +94,7 @@ export default {
         message_id: messageId,
         first_name: firstName,
         message,
+        group_id: groupId,
         is_group: isGroup,
       });
       return response;
