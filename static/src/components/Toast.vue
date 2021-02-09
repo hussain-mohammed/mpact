@@ -7,6 +7,14 @@
 
 <script>
 export default {
+  name: 'toast',
   props: ['text', 'hasError'],
 };
 </script>
+<style scoped>
+.toast {
+  left: 0;
+  right: 0;
+  z-index: 9999;
+}
+</style>

@@ -383,9 +383,10 @@ async def delete_flagged_message(phone, id):
                 }
 
             if flagged_message.delete():
-                message = Message.objects.get(pk=flagged_message.message_id)
-                message.is_flagged = False
-                message.save()
+                if flagged_message.is_group == False:
+                    message = Message.objects.get(pk=flagged_message.message_id)
+                    message.is_flagged = False
+                    message.save()
 
                 return {
                     DATA: {MESSAGE: DELETE_SUCCESS, IS_SUCCESS: True},
