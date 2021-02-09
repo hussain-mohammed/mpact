@@ -45,8 +45,6 @@
   </div>
 </template>
 <script>
-import $ from 'jquery';
-
 const Login = () => import('../components/Login.vue');
 const Info = () => import('../components/TelegramInfo.vue');
 const OTP = () => import('../components/OTP.vue');
@@ -186,7 +184,7 @@ export default {
       }
     },
     showNotification() {
-      $('.toast').toast('show');
+      this.$('.toast').toast('show');
     },
   },
 };

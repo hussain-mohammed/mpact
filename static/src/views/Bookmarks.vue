@@ -2,13 +2,14 @@
   <div class='vw-100 vh-100'>
     <div class='row m-0 p-0'>
       <div class='col-10 p-0'>
+        <Toast :text='toastMessage' :hasError='showToastError' />
         <chat-window height='100vh' class='bookmarks-widget-1' v-bind='chatProps'
           @fetch-messages='fetchMoreBookmarks($event)'>
           <template #message='{message}'>
             <div :id='message._id' class='message-container'>
               <div class='message-card cursor__pointer'>
                 <div class='username'>
-                  <router-link target='_blank' exact-path :to="{path: '/chat',
+                  <router-link exact-path :to="{path: '/chat',
                   query: { roomId: message.roomId, messageId: message.messageId, isGroup:
                   message.isGroup, groupId: message.groupId || null}}">
                     <span>
@@ -17,7 +18,7 @@
                   </router-link>
                 </div>
                 <div>
-                  <router-link  target='_blank' exact-path :to="{path: '/chat',
+                  <router-link exact-path :to="{path: '/chat',
                   query: { roomId: message.roomId, messageId: message.messageId, isGroup:
                   message.isGroup, groupId: message.groupId || null, }}">
                     <span class='message-content cursor__pointer'>
@@ -29,7 +30,7 @@
                   <span>{{message.timestamp}}</span>
                 </div>
                 <div class='svg-button message-options cursor__pointer' :data-id='message._id'
-                  @click='unFlagMessage({id: message._id})'>
+                  @click='unFlagMessage({id: message._id})' title='Unflag Message'>
                   <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor'
                     viewBox='0 0 16 16'>
                     <path d='M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1
@@ -48,6 +49,7 @@
 <script>
 import MessageService from '../services/MessageService';
 import { convertDate, convertTime } from '../utils/helpers';
+import ToastMixin from '../mixins/ToastMixin';
 import 'vue-advanced-chat/dist/vue-advanced-chat.css';
 import '../styles/message.css';
 
@@ -57,10 +59,13 @@ export default {
   components: {
     ChatWindow,
   },
+  mixins: [ToastMixin],
   data() {
     return {
       limit: 50,
       offset: 0,
+      toastMessage: '',
+      showToastError: false,
       lastMessage: null,
       chatProps: {
         currentUserId: 1,
@@ -117,6 +122,8 @@ export default {
             roomName: 'Bookmarks',
             users: [],
           }];
+          this.toastMessage = 'Fetched all bookmarks';
+          this.showToast();
           if (formattedMessages.length < 50) {
             this.chatProps.messagesLoaded = true;
           }
@@ -179,6 +186,9 @@ export default {
         if (response && response.data.is_success) {
           const updatedMessages = this.chatProps.messages.filter((message) => message._id !== id);
           this.chatProps.messages = updatedMessages;
+          this.showToastError = true;
+          this.toastMessage = 'Bookmark is deleted';
+          this.showToast();
         }
       } catch (err) {
         console.error(err);

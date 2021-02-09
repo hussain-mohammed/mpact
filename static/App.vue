@@ -17,10 +17,11 @@ Vue.component('error-boundary', {
     return false;
   },
 });
+
 export default {
 };
 </script>
 
 <style>
-    @import url('./src/styles/index.css');
+  @import url('./src/styles/index.css');
 </style>
