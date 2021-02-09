@@ -26,6 +26,7 @@
 
 <script>
 export default {
+  name: 'telegram-info',
   props: ['receiveClass'],
   methods: {
     closeInfoComponent() {
