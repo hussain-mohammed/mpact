@@ -30,7 +30,8 @@
                   <span>{{message.timestamp}}</span>
                 </div>
                 <div class='svg-button message-options cursor__pointer' :data-id='message._id'
-                  @click='unFlagMessage({id: message._id})' title='Unflag Message'>
+                  @click='currentMessage = message' title='Unflag Message'
+                  data-toggle='modal' data-target='#deleteWarning'>
                   <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor'
                     viewBox='0 0 16 16'>
                     <path d='M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1
@@ -42,11 +43,13 @@
             </div>
           </template>
         </chat-window>
+        <warning-modal v-if='currentMessage' :message='currentMessage' @unFlagMessage='unFlagMessage($event)' />
       </div>
     </div>
   </div>
 </template>
 <script>
+import Vue from 'vue';
 import MessageService from '../services/MessageService';
 import { convertDate, convertTime } from '../utils/helpers';
 import ToastMixin from '../mixins/ToastMixin';
@@ -54,6 +57,33 @@ import 'vue-advanced-chat/dist/vue-advanced-chat.css';
 import '../styles/message.css';
 
 const ChatWindow = () => import('vue-advanced-chat');
+
+Vue.component('warning-modal', {
+  props: ['message'],
+  template: `
+    <div class='modal fade' id='deleteWarning' tabindex='-1' role='dialog' aria-labelledby='deleteWarning'
+      aria-hidden='true'>
+      <div class='modal-dialog' role='document'>
+        <div class='modal-content'>
+          <div class='modal-header'>
+            <h5 class='modal-title' id='exampleModalLabel'>{{message.content}}</h5>
+            <button type='button' class='close' data-dismiss='modal' aria-label='Close'>
+              <span aria-hidden='true'>&times;</span>
+            </button>
+          </div>
+          <div class='modal-body'>
+            Are you sure you want to delete this bookmark?
+          </div>
+          <div class='modal-footer'>
+            <button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>
+            <button type='button' class='btn btn-danger' data-dismiss='modal' @click='$emit("unFlagMessage", {id: message._id})'>Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+});
+
 export default {
   name: 'bookmarks',
   components: {
@@ -67,6 +97,7 @@ export default {
       toastMessage: '',
       showToastError: false,
       lastMessage: null,
+      currentMessage: null,
       chatProps: {
         currentUserId: 1,
         rooms: [],
@@ -122,7 +153,7 @@ export default {
             roomName: 'Bookmarks',
             users: [],
           }];
-          this.toastMessage = 'Fetched all bookmarks';
+          this.toastMessage = 'Fetched all flagged messages';
           this.showToast();
           if (formattedMessages.length < 50) {
             this.chatProps.messagesLoaded = true;
@@ -179,6 +210,7 @@ export default {
     },
     async unFlagMessage({ id }) {
       try {
+        this.currentMessage = null;
         const params = {
           id,
         };
@@ -186,7 +218,6 @@ export default {
         if (response && response.data.is_success) {
           const updatedMessages = this.chatProps.messages.filter((message) => message._id !== id);
           this.chatProps.messages = updatedMessages;
-          this.showToastError = true;
           this.toastMessage = 'Bookmark is deleted';
           this.showToast();
         }

@@ -5,6 +5,7 @@
         <side-nav :username='username' :contacts='contacts' @getIndividualMessages='getIndividualMessages($event)'
           @getGroupMessages='getGroupMessages($event)' />
       </div>
+      <Toast :text='toastMessage' :hasError='showToastError' />
       <div class='col-10 p-0'>
         <chat-window height='100vh' class='chat-widget-1' :currentUserId='currentUserId' :rooms='rooms'
           :messages='messages' :single-room='hideSideNav' :messages-loaded='messagesLoaded' :styles='styles'
@@ -14,6 +15,11 @@
             <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'>
               <path fill-rule='evenodd'
                 d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z' />
+            </svg>
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor'
+              class='bookmark' viewBox='0 0 16 16'>
+              <path
+                d='M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z' />
             </svg>
           </template>
           <template #checkmark-icon>
@@ -33,6 +39,7 @@
 /* eslint-disable import/no-named-as-default-member */
 import Vue from 'vue';
 import MessageService from '../services/MessageService';
+import ToastMixin from '../mixins/ToastMixin';
 import dateHelpers from '../utils/helpers/dateHelpers';
 import 'vue-advanced-chat/dist/vue-advanced-chat.css';
 
@@ -45,26 +52,12 @@ export default {
     ChatWindow,
     SideNav,
   },
-  async mounted() {
-    await this.getContacts();
-    this.username = localStorage.getItem('username') || '';
-    this.selectedRoom = this.$route.query.roomId || '';
-    this.groupBookmark = this.$route.query.isGroup === 'true' || false;
-    this.groupId = this.$route.query.groupId || null;
-    const selectedDiv = document.querySelector(`div[data-id='${this.selectedRoom}']`);
-    const groupButton = document.querySelector(`button[data-id='${this.groupId}']`);
-    if (this.groupBookmark && (this.groupId === this.selectedRoom)) {
-      if (selectedDiv) {
-        selectedDiv.click();
-      }
-    } else if (groupButton && selectedDiv) {
-      groupButton.click();
-      selectedDiv.click();
-    }
-  },
+  mixins: [ToastMixin],
   data() {
     return {
       username: '',
+      toastMessage: '',
+      showToastError: false,
       rooms: [],
       messages: [],
       currentUserId: 1,
@@ -103,6 +96,23 @@ export default {
         },
       },
     };
+  },
+  async mounted() {
+    await this.getContacts();
+    this.username = localStorage.getItem('username') || '';
+    this.selectedRoom = this.$route.query.roomId || '';
+    this.groupBookmark = this.$route.query.isGroup === 'true' || false;
+    this.groupId = this.$route.query.groupId || null;
+    const selectedDiv = document.querySelector(`div[data-id='${this.selectedRoom}']`);
+    const groupButton = document.querySelector(`button[data-id='${this.groupId}']`);
+    if (this.groupBookmark && (this.groupId === this.selectedRoom)) {
+      if (selectedDiv) {
+        selectedDiv.click();
+      }
+    } else if (groupButton && selectedDiv) {
+      groupButton.click();
+      selectedDiv.click();
+    }
   },
   methods: {
     async messageActionHandler({ roomId, action, message }) {
@@ -156,6 +166,10 @@ export default {
               saved: true,
             });
           }
+        } else {
+          this.showToastError = true;
+          this.toastMessage = 'This message is already flagged!';
+          this.showToast();
         }
       } catch (err) {
         console.error(err);

@@ -8,20 +8,19 @@
     </div>
     <div class='chat-contacts'>
       <div class='side-nav-row mt-2' v-for='(mainObj, index) in contacts' :key='index'>
-        <div class='w-100 bg-telegram__primary text-white d-flex justify-content-between'>
-          <div class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0' @click="$emit('getGroupMessages', { roomName: mainObj.chat.title,
-            roomId: mainObj.chat.id })" :data-id='mainObj.chat.id'>
+        <div :class="['w-100 bg-telegram__primary text-white d-flex justify-content-between', { 'active-channel': activeChannel === index }]">
+          <div class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0' @click="setActiveChannel(index); $emit('getGroupMessages', { roomName: mainObj.chat.title, roomId: mainObj.chat.id })" :data-id='mainObj.chat.id'>
             <span class='px-4 text-white'>{{ mainObj.chat.title }}</span>
           </div>
           <button class='btn expand-icon box-shadow__none border-0 rounded-0 text-white' type='button'
-            :data-id='mainObj.chat.id' :data-target="'#demo-' + index" data-toggle='collapse'>
+            :data-id='mainObj.chat.id' :data-target="'#demo-' + index" data-toggle='collapse' @click="setActiveChannel(index)">
             <i class='fa'></i>
           </button>
         </div>
         <div class='collapse border-0 bg-white cursor__pointer' :id="'demo-' + index">
-          <div v-for='(subObj, index) in mainObj.bot.bot_individuals' :key='index' :data-id='subObj.individual.id'
+          <div v-for='(subObj, i) in mainObj.bot.bot_individuals' :key='i' :data-id='subObj.individual.id'
             class='text-telegram__primary pt-2 pb-1 pl-5' @click="$emit('getIndividualMessages', { roomName: subObj.individual.first_name,
-            roomId: subObj.individual.id, groupId: mainObj.chat.id } )">
+            roomId: subObj.individual.id, groupId: mainObj.chat.id })">
             {{ subObj.individual.first_name }}
           </div>
         </div>
@@ -35,10 +34,13 @@ export default {
   props: ['username', 'contacts'],
   data() {
     return {
-      data: {},
+      activeChannel: null,
     };
   },
   methods: {
+    setActiveChannel(index) {
+      this.activeChannel = index;
+    },
     async navigateToBookmarks() {
       const route = this.$router.resolve({ path: '/flagged-messages' });
       window.open(route.href, '_self');
@@ -125,5 +127,9 @@ export default {
 
   .expand-icon {
     flex-basis: 25%;
+  }
+
+  .active-channel {
+    background: #5682a385 !important;
   }
 </style>
