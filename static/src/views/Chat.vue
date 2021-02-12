@@ -13,20 +13,16 @@
           @send-message='sendMessage($event)' @message-action-handler='messageActionHandler($event)'>
           <template #dropdown-icon>
             <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'>
-              <path fill-rule='evenodd'
-                d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z' />
-            </svg>
-            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor'
-              class='bookmark' viewBox='0 0 16 16'>
-              <path
-                d='M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z' />
+              <path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8
+              10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6
+                6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z' />
             </svg>
           </template>
           <template #checkmark-icon>
-            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor'
-              class='bookmark' viewBox='0 0 16 16'>
-              <path
-                d='M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z' />
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bookmark'
+              viewBox='0 0 16 16'>
+              <path d='M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14
+                15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z' />
             </svg>
           </template>
         </chat-window>
@@ -156,19 +152,36 @@ export default {
           groupId: message.groupId,
           isGroup: this.groupView,
         };
+        if (!params.isGroup) {
+          const senderDetails = this.contacts.find(
+            (contact) => contact.chat.id === message.groupId,
+          );
+          if (senderDetails && senderDetails.bot.id === message.sender_id) {
+            params.firstName = senderDetails.bot.username;
+          } else {
+            const userDetails = senderDetails.bot.bot_individuals.find(
+              (individual) => individual.individual.id === message.sender_id,
+            );
+            params.firstName = userDetails.individual.first_name;
+          }
+        }
         if (!message.isFlagged) {
           const result = await MessageService.flagMessage(params);
           if (result && result.data.is_success) {
-            const messageIndex = this.messages.findIndex((m) => m._id === params.messageId);
+            const messageIndex = this.messages.findIndex(
+              (m) => m._id === params.messageId,
+            );
             Vue.set(this.messages, messageIndex, {
               ...message,
               isFlagged: true,
               saved: true,
             });
+            this.toastMessage = `${message.content} is successfully flagged!`;
+            this.showToast();
           }
         } else {
           this.showToastError = true;
-          this.toastMessage = 'This message is already flagged!';
+          this.toastMessage = `${message.content} is already flagged!`;
           this.showToast();
         }
       } catch (err) {

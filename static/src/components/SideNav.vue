@@ -7,19 +7,23 @@
       <div class='logout h-100' @click='logout()' title='logout'></div>
     </div>
     <div class='chat-contacts'>
-      <div class='side-nav-row mt-2' v-for='(mainObj, index) in contacts' :key='index'>
-        <div :class="['w-100 bg-telegram__primary text-white d-flex justify-content-between', { 'active-channel': activeChannel === index }]">
-          <div class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0' @click="setActiveChannel(index); $emit('getGroupMessages', { roomName: mainObj.chat.title, roomId: mainObj.chat.id })" :data-id='mainObj.chat.id'>
+      <div class='side-nav-row mt-2' v-for='(mainObj, i) in contacts' :key='i'>
+        <div
+          :class="['w-100 bg-telegram__primary text-white d-flex justify-content-between', { 'active-channel': activeChannel === i }]">
+          <div class='btn channel-name text-left box-shadow__none px-0 border-0 rounded-0'
+            @click="setActiveChannel(i); $emit('getGroupMessages', { roomName: mainObj.chat.title, roomId: mainObj.chat.id })"
+            :data-id='mainObj.chat.id'>
             <span class='px-4 text-white'>{{ mainObj.chat.title }}</span>
           </div>
           <button class='btn expand-icon box-shadow__none border-0 rounded-0 text-white' type='button'
-            :data-id='mainObj.chat.id' :data-target="'#demo-' + index" data-toggle='collapse' @click="setActiveChannel(index)">
+            :data-id='mainObj.chat.id' :data-target="'#demo-' + i" data-toggle='collapse'>
             <i class='fa'></i>
           </button>
         </div>
-        <div class='collapse border-0 bg-white cursor__pointer' :id="'demo-' + index">
-          <div v-for='(subObj, i) in mainObj.bot.bot_individuals' :key='i' :data-id='subObj.individual.id'
-            class='text-telegram__primary pt-2 pb-1 pl-5' @click="$emit('getIndividualMessages', { roomName: subObj.individual.first_name,
+        <div class='collapse border-0 bg-white cursor__pointer' :id="'demo-' + i">
+          <div v-for='(subObj, j) in mainObj.bot.bot_individuals' :key='j' :data-id='subObj.individual.id'
+            class='text-telegram__primary pt-2 pb-1 pl-5' @click="setActiveChannel(i);
+            $emit('getIndividualMessages', { roomName: subObj.individual.first_name,
             roomId: subObj.individual.id, groupId: mainObj.chat.id })">
             {{ subObj.individual.first_name }}
           </div>
@@ -38,8 +42,8 @@ export default {
     };
   },
   methods: {
-    setActiveChannel(index) {
-      this.activeChannel = index;
+    setActiveChannel(i) {
+      this.activeChannel = i;
     },
     async navigateToBookmarks() {
       const route = this.$router.resolve({ path: '/flagged-messages' });
