@@ -9,7 +9,7 @@
       <div class='col-10 p-0'>
         <chat-window height='100vh' class='chat-widget-1' :currentUserId='currentUserId' :rooms='rooms'
           :messages='messages' :single-room='hideSideNav' :messages-loaded='messagesLoaded' :styles='styles'
-          :message-actions='messageActions' @fetch-messages='loadOldMessages($event)'
+          :message-actions='messageActions' @fetch-messages='loadOldMessages($event)' :showNewMessagesDivider='showNewMessagesDivider'
           @send-message='sendMessage($event)' @message-action-handler='messageActionHandler($event)'>
           <template #dropdown-icon>
             <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'>
@@ -66,6 +66,7 @@ export default {
       groupId: null,
       offset: 0,
       lastMessage: null,
+      showNewMessagesDivider: false,
       messageActions: [
         {
           name: 'flagMessage',
@@ -149,22 +150,25 @@ export default {
           messageId: message._id,
           firstName: message.sender_id,
           message: message.content,
-          groupId: message.groupId,
+          groupId: message.groupId || this.groupId,
           isGroup: this.groupView,
         };
         if (!params.isGroup) {
           const senderDetails = this.contacts.find(
-            (contact) => contact.chat.id === message.groupId,
+            (contact) => contact.chat.id === params.groupId,
           );
-          if (senderDetails && senderDetails.bot.id === message.sender_id) {
-            params.firstName = senderDetails.bot.username;
-          } else {
-            const userDetails = senderDetails.bot.bot_individuals.find(
-              (individual) => individual.individual.id === message.sender_id,
-            );
-            params.firstName = userDetails.individual.first_name;
+          if (senderDetails) {
+            if (senderDetails.bot.id === message.sender_id) {
+              params.firstName = senderDetails.bot.username;
+            } else {
+              const userDetails = senderDetails.bot.bot_individuals.find(
+                (individual) => individual.individual.id === message.sender_id,
+              );
+              params.firstName = userDetails.individual.first_name;
+            }
           }
         }
+        const trimmedMessage = message.content.trim().length > 25 ? `${message.content.trim().slice(0, 25)}...` : message.content.trim();
         if (!message.isFlagged) {
           const result = await MessageService.flagMessage(params);
           if (result && result.data.is_success) {
@@ -176,12 +180,13 @@ export default {
               isFlagged: true,
               saved: true,
             });
-            this.toastMessage = `${message.content} is successfully flagged!`;
+            this.showToastError = false;
+            this.toastMessage = `${trimmedMessage} is successfully flagged!`;
             this.showToast();
           }
         } else {
           this.showToastError = true;
-          this.toastMessage = `${message.content} is already flagged!`;
+          this.toastMessage = `${trimmedMessage} is already flagged!`;
           this.showToast();
         }
       } catch (err) {
@@ -316,6 +321,7 @@ export default {
       groupId,
     }) {
       try {
+        this.groupId = groupId;
         this.messagesLoaded = false;
         this.offset = 0;
         const {
@@ -457,7 +463,7 @@ export default {
             date: dateHelpers.convertDate(date),
             timestamp: dateHelpers.convertTime(date),
             isFlagged: false,
-            username: this.sender,
+            username: message.sender,
           }];
           this.messages = newMessages;
           this.messagesLoaded = true;
