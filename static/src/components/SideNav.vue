@@ -51,6 +51,7 @@ export default {
   methods: {
     setActiveChannel(i) {
       this.activeChannel = i;
+      this.activeChat = null;
     },
     setActiveChat(i) {
       this.activeChat = i;
