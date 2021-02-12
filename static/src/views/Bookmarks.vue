@@ -66,7 +66,9 @@ Vue.component('warning-modal', {
       <div class='modal-dialog' role='document'>
         <div class='modal-content'>
           <div class='modal-header'>
-            <h5 class='modal-title' id='exampleModalLabel'>{{message.content}}</h5>
+            <h5 class='modal-title' id='exampleModalLabel'>
+            {{message.content.trim().length > 25 ? message.content.trim().slice(0, 75) + '...' : message.content.trim()}}
+            </h5>
             <button type='button' class='close' data-dismiss='modal' aria-label='Close'>
               <span aria-hidden='true'>&times;</span>
             </button>
@@ -153,6 +155,7 @@ export default {
             roomName: 'Bookmarks',
             users: [],
           }];
+          this.showToastError = false;
           this.toastMessage = 'Fetched all flagged messages';
           this.showToast();
           if (formattedMessages.length < 50) {
