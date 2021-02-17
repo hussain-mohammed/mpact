@@ -10,7 +10,7 @@ from telethon.tl import types
 
 from constants import BOT_TOKEN, TELEGRAM_API_HASH, TELEGRAM_API_ID
 from logger import logger
-from messages import WELCOME
+from telegram_bot.messages import WELCOME
 from mpact.models import Bot, BotIndividual, Chat, ChatBot, Individual, Message
 from mpact.serializers import ChatSerializer
 from utils import get_or_none

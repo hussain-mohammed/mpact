@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from constants import (
+from telegram_bot.constants import (
     BOT_TOKEN,
     CODE,
     DATA,
@@ -32,7 +32,7 @@ from constants import (
     USERNAME,
 )
 from django.contrib.auth.models import User
-from logger import logger
+from telegram_bot.logger import logger
 from rest_framework import status
 from telegram_bot.settings import container
 from telethon import TelegramClient
@@ -42,7 +42,7 @@ from telethon.errors import (
     SessionPasswordNeededError,
 )
 from telethon.tl.types import InputPeerUser
-from utils import encode_token, get_or_none
+from telegram_bot.utils import encode_token, get_or_none
 
 from .models import BotIndividual, ChatBot, FlaggedMessage, Individual, Message
 from .serializers import ChatBotSerializer, FlaggedMessageSerializer, MessageSerializer
