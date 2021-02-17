@@ -1,5 +1,5 @@
 from itsdangerous import URLSafeSerializer
-from constants import (
+from telegram_bot.constants import (
     SECURED_URL_SECRET_KEY,
     SECURITY_PASSWORD_SALT,
     PHONE,
@@ -8,7 +8,7 @@ from constants import (
     MESSAGE,
 )
 from rest_framework.response import Response
-from logger import logger
+from telegram_bot.logger import logger
 
 
 def get_or_none(model, **kwargs):

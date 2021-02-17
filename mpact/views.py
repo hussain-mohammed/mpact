@@ -1,9 +1,9 @@
 import asyncio
 
-from constants import DATA, STATUS
+from telegram_bot.constants import DATA, STATUS
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from utils import token_required
+from telegram_bot.utils import token_required
 
 from mpact.services import (
     create_flagged_message,

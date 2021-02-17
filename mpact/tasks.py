@@ -1,5 +1,5 @@
 from celery import shared_task
-from constants import DATA, INDIVIDUAL, IS_SUCCESS, MESSAGE, MESSAGE_SENT
+from telegram_bot.constants import DATA, INDIVIDUAL, IS_SUCCESS, MESSAGE, MESSAGE_SENT
 from telethon.tl.types import InputPeerChat, InputPeerUser
 
 from .models import Individual
