@@ -1,5 +1,8 @@
 from contextlib import asynccontextmanager
 
+from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
+from rest_framework import status
 from telegram_bot.constants import (
     BOT_TOKEN,
     CODE,
@@ -30,11 +33,11 @@ from telegram_bot.constants import (
     TOKEN,
     TWO_FA_ENABLED,
     USERNAME,
+    WEBSOCKET_ROOM_NAME,
 )
-from django.contrib.auth.models import User
 from telegram_bot.logger import logger
-from rest_framework import status
 from telegram_bot.settings import container
+from telegram_bot.utils import encode_token, get_or_none
 from telethon import TelegramClient
 from telethon.errors import (
     PhoneCodeExpiredError,
@@ -42,7 +45,6 @@ from telethon.errors import (
     SessionPasswordNeededError,
 )
 from telethon.tl.types import InputPeerUser
-from telegram_bot.utils import encode_token, get_or_none
 
 from .models import BotIndividual, ChatBot, FlaggedMessage, Individual, Message
 from .serializers import ChatBotSerializer, FlaggedMessageSerializer, MessageSerializer
@@ -187,8 +189,13 @@ async def send_msg(phone, data):
                     sent_msg = {
                         "id": msg_inst.id,
                         "sender": current_bot.username,
-                        "date": msg_inst.date,
+                        "date": str(msg_inst.date),
+                        MESSAGE: data[MESSAGE],
                     }
+            channel_layer = get_channel_layer()
+            await channel_layer.group_send(
+                WEBSOCKET_ROOM_NAME, {"type": "chat_message", MESSAGE: sent_msg}
+            )
 
             return {
                 DATA: {MESSAGE: sent_msg, IS_SUCCESS: True},
