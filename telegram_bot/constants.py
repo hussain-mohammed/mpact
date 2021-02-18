@@ -24,6 +24,7 @@ INDIVIDUAL = "individual"
 TOKEN = "token"
 FLAGGED_MESSAGE = "flagged_messages"
 ID = "id"
+WEBSOCKET_ROOM_NAME = "chat"
 
 DIALOGS_LIMIT = 25
 
