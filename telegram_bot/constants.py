@@ -25,7 +25,8 @@ TOKEN = "token"
 FLAGGED_MESSAGE = "flagged_messages"
 ID = "id"
 WEBSOCKET_ROOM_NAME = "chat"
-
+ERRONEOUS_ROWS = "erroneous_rows"
+ERRONEOUS_SHEETS = "erroneous_sheets"
 DIALOGS_LIMIT = 25
 
 # Environment Variables
@@ -46,3 +47,5 @@ RECORD_NF = "Record not found"
 DELETE_SUCCESS = "Delete successful"
 DELETE_FAIL = "Delete fail"
 GROUP_MSGS_FORBIDDEN = "Cannot fetch the message."
+FILE_DOWNLOADED = "File downloaded successfully"
+MESSAGE_SCHEDULED = "Messages has been scheduled"

@@ -1,19 +1,21 @@
 import asyncio
 
-from telegram_bot.constants import DATA, STATUS
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from telegram_bot.constants import DATA, STATUS
 from telegram_bot.utils import token_required
 
 from mpact.services import (
     create_flagged_message,
     delete_flagged_message,
+    download_schedule_messages_file,
     get_chat_msg,
     get_dialog,
     get_flagged_messages,
     get_individual_msg,
     login,
     logout,
+    schedule_messages,
     send_msg,
 )
 
@@ -127,5 +129,22 @@ class FlagMessageDelete(APIView):
     def delete(self, request, phone, id):
         result = new_or_current_event_loop().run_until_complete(
             delete_flagged_message(phone, id)
+        )
+        return Response(result[DATA], status=result[STATUS])
+
+
+class ScheduleMessages(APIView):
+    @token_required
+    def get(self, request, phone):
+        result = new_or_current_event_loop().run_until_complete(
+            download_schedule_messages_file(phone)
+        )
+        return Response(result[DATA], status=result[STATUS])
+
+    @token_required
+    def post(self, request, phone):
+        file = request.data["file"]
+        result = new_or_current_event_loop().run_until_complete(
+            schedule_messages(phone, file)
         )
         return Response(result[DATA], status=result[STATUS])

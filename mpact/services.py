@@ -1,7 +1,13 @@
+import json
+import uuid
 from contextlib import asynccontextmanager
+from datetime import timedelta
 
+import tablib
 from channels.layers import get_channel_layer
+from dateutil.parser import parse
 from django.contrib.auth.models import User
+from django_celery_beat.models import ClockedSchedule, PeriodicTask
 from rest_framework import status
 from telegram_bot.constants import (
     BOT_TOKEN,
@@ -10,6 +16,9 @@ from telegram_bot.constants import (
     DELETE_FAIL,
     DELETE_SUCCESS,
     DIALOGS_LIMIT,
+    ERRONEOUS_ROWS,
+    ERRONEOUS_SHEETS,
+    FILE_DOWNLOADED,
     FIRST_NAME,
     FLAGGED_MESSAGE,
     GROUP_MSGS_FORBIDDEN,
@@ -20,6 +29,7 @@ from telegram_bot.constants import (
     LAST_NAME,
     LOGOUT,
     MESSAGE,
+    MESSAGE_SCHEDULED,
     NOT_AUTHORIZED,
     PASSWORD,
     PASSWORD_REQUIRED,
@@ -36,8 +46,6 @@ from telegram_bot.constants import (
     WEBSOCKET_ROOM_NAME,
 )
 from telegram_bot.logger import logger
-
-
 from telegram_bot.settings import container
 from telegram_bot.utils import encode_token, get_or_none
 from telethon import TelegramClient
@@ -48,7 +56,7 @@ from telethon.errors import (
 )
 from telethon.tl.types import InputPeerUser
 
-from .models import BotIndividual, ChatBot, FlaggedMessage, Individual, Message
+from .models import BotIndividual, Chat, ChatBot, FlaggedMessage, Individual, Message
 from .serializers import ChatBotSerializer, FlaggedMessageSerializer, MessageSerializer
 
 
@@ -406,3 +414,73 @@ async def delete_flagged_message(phone, id):
                 STATUS: status.HTTP_400_BAD_REQUEST,
             }
         return NOT_AUTHORIZED
+
+
+async def schedule_messages(phone, file):
+    """
+    Schedule the messages in bulk and
+    returns erroneous sheets and rows if any
+    """
+    book = tablib.Databook()
+    book.load(file, "xlsx")
+    sheets = json.loads(book.export("json"))
+    erroneous_rows = {}
+    erroneous_sheets = []
+    for sheet in sheets:
+        try:
+            receiver_id = int(sheet["title"].split(",")[1])
+            chat = Chat.objects.get(id=receiver_id)
+        except (Chat.DoesNotExist, ValueError):
+            erroneous_sheets.append(sheet["title"])
+            continue
+
+        start_date_time = parse(f"{chat.start_date} {chat.start_time}")
+
+        for ind, row in enumerate(sheet["data"]):
+            if row["Days"] is not None and row["Message"] is not None:
+                schedule, created = ClockedSchedule.objects.get_or_create(
+                    clocked_time=start_date_time + timedelta(days=row["Days"]),
+                )
+                PeriodicTask.objects.create(
+                    clocked=schedule,
+                    name=uuid.uuid4(),
+                    task="mpact.tasks.send_msgs",
+                    args=json.dumps([receiver_id, row["Message"]]),
+                    one_off=True,
+                )
+            else:
+                if sheet["title"] in erroneous_rows:
+                    erroneous_rows[sheet["title"]].append(ind + 1)
+                else:
+                    erroneous_rows[sheet["title"]] = [ind + 1]
+    return {
+        DATA: {
+            MESSAGE: MESSAGE_SCHEDULED,
+            ERRONEOUS_ROWS: erroneous_rows,
+            ERRONEOUS_SHEETS: erroneous_sheets,
+            IS_SUCCESS: True,
+        },
+        STATUS: status.HTTP_200_OK,
+    }
+
+
+async def download_schedule_messages_file(phone):
+    """
+    Downloads the sample schedule message file
+    with the sheets for each group chat.
+    """
+    headers = ["Days", "Message", "Comment"]
+    sample_xlsx_file = tablib.Databook()
+    group_chats = Chat.objects.all()
+
+    for chat in group_chats:
+        sheet = tablib.Dataset(headers=headers)
+        sheet.title = f"{chat.title},{chat.id}"
+        sample_xlsx_file.add_sheet(sheet)
+    with open("schedule_message_format.xlsx", "wb") as xlsx:
+        xlsx.write(sample_xlsx_file.export("xlsx"))
+
+    return {
+        DATA: {MESSAGE: FILE_DOWNLOADED, IS_SUCCESS: True},
+        STATUS: status.HTTP_200_OK,
+    }
