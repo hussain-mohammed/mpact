@@ -2,13 +2,14 @@ from django.urls import path
 
 from .views import (
     Dialog,
+    FlagMessage,
+    FlagMessageDelete,
     GetChatMessage,
     GetIndividaulMessage,
     Login,
     Logout,
+    ScheduleMessages,
     SendMessage,
-    FlagMessage,
-    FlagMessageDelete,
 )
 
 urlpatterns = [
@@ -20,4 +21,5 @@ urlpatterns = [
     path("dialogs", Dialog.as_view()),
     path("flaggedmessages", FlagMessage.as_view()),
     path("flaggedmessages/<int:id>", FlagMessageDelete.as_view()),
+    path("schedule_messages", ScheduleMessages.as_view()),
 ]

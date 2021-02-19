@@ -24,6 +24,8 @@ class Chat(models.Model):
     id = models.IntegerField(primary_key=True)
     title = models.TextField()
     created_at = models.DateTimeField()
+    start_date = models.DateField(default=timezone.now)
+    start_time = models.TimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.id} - {self.title}"
