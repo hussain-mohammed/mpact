@@ -80,29 +80,22 @@ class BotIndividual(models.Model):
 
 
 class Message(models.Model):
-    individual = models.ForeignKey(Individual, on_delete=models.CASCADE)
-    sender = models.IntegerField()
+    telegram_msg_id = models.IntegerField()
+    sender_id = models.IntegerField()
+    sender_name = models.TextField()
+    room_id = models.IntegerField()
     message = models.TextField(null=True)
     date = models.DateTimeField(default=timezone.now)
-    is_flagged = models.BooleanField(default=False)
+    from_group = models.BooleanField()
 
     def __str__(self):
-        return f"{self.individual.first_name} - {self.sender}"
+        return f"{self.room_id} - {self.sender_name} - {self.message}"
 
 
 class FlaggedMessage(models.Model):
-    room_id = models.IntegerField()
-    message_id = models.IntegerField()
-    first_name = models.TextField()
-    message = models.TextField()
+    message = models.OneToOneField(Message, on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
-    is_group = models.BooleanField()
-    # If the message is being flagged from individual chat,
-    # group_id is needed to link the flagged message screen to individual chat
     group_id = models.IntegerField(null=True)
 
-    class Meta:
-        unique_together = ("room_id", "message_id")
-
     def __str__(self):
-        return f"{self.room_id} - {self.first_name} - {self.message}"
+        return f"{self.message.id} - {self.message.room_id}"
