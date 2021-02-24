@@ -123,9 +123,12 @@ if os.environ.get("DEPLOY_ENV") == "dev":
 else:
     DATABASES = {"default": dj_database_url.config(conn_max_age=600, ssl_require=True)}
 
-from alchemysession import AlchemySessionContainer
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
 
-container = AlchemySessionContainer(os.environ["DATABASE_URL"])
 
 CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_BEAT_SCHEDULE = {}
@@ -140,3 +143,9 @@ CHANNEL_LAYERS = {
 }
 
 ASGI_APPLICATION = "telegram_bot.routing.application"
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+}

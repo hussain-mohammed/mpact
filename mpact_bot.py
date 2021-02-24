@@ -13,9 +13,17 @@ from mpact.models import Bot, BotIndividual, Chat, ChatBot, Individual
 from mpact.serializers import ChatSerializer, MessageSerializer
 from telegram_bot.constants import (
     BOT_TOKEN,
+    FIRST_NAME,
+    FROM_GROUP,
+    LAST_NAME,
     MESSAGE,
+    ROOM_ID,
+    SENDER_ID,
+    SENDER_NAME,
     TELEGRAM_API_HASH,
     TELEGRAM_API_ID,
+    TELEGRAM_MSG_ID,
+    USERNAME,
     WEBSOCKET_ROOM_NAME,
 )
 from telegram_bot.logger import logger
@@ -52,9 +60,9 @@ async def chat_handler(event):
                     bot, created = Bot.objects.get_or_create(
                         id=user_details.id,
                         defaults={
-                            "username": user_details.username,
-                            "first_name": user_details.first_name,
-                            "last_name": user_details.last_name,
+                            USERNAME: user_details.username,
+                            FIRST_NAME: user_details.first_name,
+                            LAST_NAME: user_details.last_name,
                         },
                     )
                     chat_bot = ChatBot.objects.create(chat=chat, bot=bot)
@@ -77,23 +85,25 @@ async def incoming_message_handler(event):
     """
     try:
         channel_layer = get_channel_layer()
-        msg_data = message_data(event.sender.id, event.sender.id, event.text)
+        msg_data = message_data(
+            event.chat_id,
+            event.message.id,
+            event.sender.id,
+            event.sender.first_name,
+            event.text,
+        )
 
         # check if the message is from individual(PeerUser) or group(PeerChat) chat
         if isinstance(event.message.peer_id, types.PeerUser):
+            msg_data[FROM_GROUP] = False
             await save_send_message(msg_data, channel_layer)
-            serializer = MessageSerializer(data=msg_data)
 
             if event.text == "/start":
                 await start_handler(event, channel_layer)
 
         elif isinstance(event.message.peer_id, types.PeerChat):
-            msg_data["id"] = event.message.id
-            msg_data["date"] = str(event.message.date)
-            await channel_layer.group_send(
-                WEBSOCKET_ROOM_NAME,
-                {"type": "chat_message", MESSAGE: msg_data},
-            )
+            msg_data[FROM_GROUP] = True
+            await save_send_message(msg_data, channel_layer)
 
     except Exception as exception:
         logger.exception(exception)
@@ -111,9 +121,9 @@ async def start_handler(event, channel_layer):
     individual, i_created = Individual.objects.get_or_create(
         id=user_details.id,
         defaults={
-            "username": user_details.username,
-            "first_name": user_details.first_name,
-            "last_name": user_details.last_name,
+            USERNAME: user_details.username,
+            FIRST_NAME: user_details.first_name,
+            LAST_NAME: user_details.last_name,
             "access_hash": user_details.access_hash,
         },
     )
@@ -124,16 +134,21 @@ async def start_handler(event, channel_layer):
     if bi_created:
         bot_individual.save()
 
-    await event.reply(WELCOME)
-    msg_data = message_data(individual.id, current_bot.id, WELCOME)
+    await event.respond(WELCOME)
+    msg_data = message_data(
+        event.chat_id, event.message.id, current_bot.id, current_bot.first_name, WELCOME
+    )
+    msg_data[FROM_GROUP] = False
     await save_send_message(msg_data, channel_layer)
 
 
-def message_data(individual_id, sender_id, message):
+def message_data(room_id, telegram_msg_id, sender_id, sender_name, message):
     return {
-        "individual": individual_id,
-        "sender": sender_id,
-        "message": message,
+        ROOM_ID: abs(room_id),
+        TELEGRAM_MSG_ID: telegram_msg_id,
+        SENDER_ID: sender_id,
+        SENDER_NAME: sender_name,
+        MESSAGE: message,
     }
 
 
