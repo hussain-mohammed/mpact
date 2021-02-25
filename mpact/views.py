@@ -9,6 +9,7 @@ from mpact.services import (
     create_flagged_message,
     delete_flagged_message,
     download_schedule_messages_file,
+    edit_message,
     get_dialog,
     get_flagged_messages,
     get_messages,
@@ -51,6 +52,13 @@ class GetMessages(APIView):
         offset = request.GET.get("offset")
         result = new_or_current_event_loop().run_until_complete(
             get_messages(room_id, limit, offset)
+        )
+        return Response(result[DATA], status=result[STATUS])
+
+    def put(self, request, room_id):
+        data = request.data
+        result = new_or_current_event_loop().run_until_complete(
+            edit_message(room_id, data)
         )
         return Response(result[DATA], status=result[STATUS])
 

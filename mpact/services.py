@@ -12,6 +12,7 @@ from telegram_bot.constants import (
     DATA,
     DELETE_FAIL,
     DELETE_SUCCESS,
+    EDIT_FAIL,
     ERRONEOUS_ROWS,
     ERRONEOUS_SHEETS,
     FILE_DOWNLOADED,
@@ -30,9 +31,11 @@ from telegram_bot.constants import (
     TELEGRAM_MSG_ID,
     WEBSOCKET_ROOM_NAME,
 )
+from telegram_bot.logger import logger
 from telegram_bot.utils import exception
 from telethon import TelegramClient
-from telethon.tl.types import InputPeerUser
+from telethon.errors import MessageIdInvalidError
+from telethon.tl.types import InputPeerUser, PeerChat, PeerUser
 
 from .models import BotIndividual, Chat, ChatBot, FlaggedMessage, Individual, Message
 from .serializers import ChatBotSerializer, FlaggedMessageSerializer, MessageSerializer
@@ -256,5 +259,35 @@ async def download_schedule_messages_file():
 
     return {
         DATA: {MESSAGE: FILE_DOWNLOADED, IS_SUCCESS: True},
+        STATUS: status.HTTP_200_OK,
+    }
+
+
+@exception
+async def edit_message(room_id, data):
+    """
+    Returns the updated message
+    """
+    async with await start_bot_client() as bot:
+        msg_inst = Message.objects.get(id=data["message_id"])
+        if msg_inst.from_group:
+            receiver = await bot.get_entity(PeerChat(room_id))
+        else:
+            receiver = await bot.get_entity(PeerUser(room_id))
+
+        msg = await bot.get_messages(receiver, ids=msg_inst.telegram_msg_id)
+        try:
+            await bot.edit_message(msg, data[MESSAGE])
+        except MessageIdInvalidError:
+            logger.exception(exception)
+            return {
+                DATA: {MESSAGE: EDIT_FAIL, IS_SUCCESS: False},
+                STATUS: status.HTTP_400_BAD_REQUEST,
+            }
+        msg_inst.message = data[MESSAGE]
+        msg_inst.save()
+
+    return {
+        DATA: {MESSAGE: data, IS_SUCCESS: True},
         STATUS: status.HTTP_200_OK,
     }
