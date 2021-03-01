@@ -14,7 +14,7 @@ from .models import (
 class IndividualSerializer(serializers.ModelSerializer):
     class Meta:
         model = Individual
-        exclude = ["access_hash", "bots"]
+        fields = ["id", "username", "first_name", "last_name"]
 
 
 class BotIndividualSerializer(serializers.ModelSerializer):
@@ -73,3 +73,9 @@ class FlaggedMessageSerializer(serializers.ModelSerializer):
             group_id=validated_data.get("group_id", None),
         )
         return validated_data
+
+
+class IndividualDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Individual
+        exclude = ["access_hash", "bots"]
