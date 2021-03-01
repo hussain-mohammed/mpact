@@ -10,6 +10,7 @@ from mpact.services import (
     delete_flagged_message,
     download_schedule_messages_file,
     edit_message,
+    export_messages,
     get_dialog,
     get_flagged_messages,
     get_messages,
@@ -116,4 +117,12 @@ class ScheduleMessages(APIView):
     def post(self, request):
         file = request.data["file"]
         result = new_or_current_event_loop().run_until_complete(schedule_messages(file))
+        return Response(result[DATA], status=result[STATUS])
+
+
+class ExportMessages(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        result = new_or_current_event_loop().run_until_complete(export_messages())
         return Response(result[DATA], status=result[STATUS])
