@@ -1,3 +1,4 @@
+import csv
 import json
 import uuid
 from datetime import timedelta
@@ -5,6 +6,7 @@ from datetime import timedelta
 import tablib
 from channels.layers import get_channel_layer
 from dateutil.parser import parse
+from django.core.management import call_command
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 from rest_framework import status
 from telegram_bot.constants import (
@@ -289,5 +291,31 @@ async def edit_message(room_id, data):
 
     return {
         DATA: {MESSAGE: data, IS_SUCCESS: True},
+        STATUS: status.HTTP_200_OK,
+    }
+
+
+@exception
+async def export_messages():
+    """
+    Exports all the messages in csv and
+    json[contains model name & pk, can be used as fixtures] format.
+    """
+    with open("messages.json", "w+") as msg_json:
+        call_command("dumpdata", "mpact.message", stdout=msg_json, indent=1)
+        msg_json.seek(0)  # move the pointer to 0th char
+        data = json.load(msg_json)
+
+    fieldnames = data[0]["fields"].keys()
+    records = []
+    for d in data:
+        records.append(d["fields"])  # excluding model name and primary key
+
+    with open("messages.csv", "w", newline="") as msg_csv:
+        writer = csv.DictWriter(msg_csv, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(records)
+    return {
+        DATA: {MESSAGE: FILE_DOWNLOADED, IS_SUCCESS: True},
         STATUS: status.HTTP_200_OK,
     }
