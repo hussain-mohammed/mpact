@@ -13,9 +13,11 @@ from mpact.services import (
     export_messages,
     get_dialog,
     get_flagged_messages,
+    get_individual_details,
     get_messages,
     schedule_messages,
     send_msg,
+    update_individual_details,
 )
 
 
@@ -125,4 +127,21 @@ class ExportMessages(APIView):
 
     def get(self, request):
         result = new_or_current_event_loop().run_until_complete(export_messages())
+        return Response(result[DATA], status=result[STATUS])
+
+
+class IndividualDetails(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, individual_id):
+        result = new_or_current_event_loop().run_until_complete(
+            get_individual_details(individual_id)
+        )
+        return Response(result[DATA], status=result[STATUS])
+
+    def put(self, request, individual_id):
+        data = request.data
+        result = new_or_current_event_loop().run_until_complete(
+            update_individual_details(individual_id, data)
+        )
         return Response(result[DATA], status=result[STATUS])
