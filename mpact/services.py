@@ -40,7 +40,12 @@ from telethon.errors import MessageIdInvalidError
 from telethon.tl.types import InputPeerUser, PeerChat, PeerUser
 
 from .models import BotIndividual, Chat, ChatBot, FlaggedMessage, Individual, Message
-from .serializers import ChatBotSerializer, FlaggedMessageSerializer, MessageSerializer
+from .serializers import (
+    ChatBotSerializer,
+    FlaggedMessageSerializer,
+    IndividualDetailSerializer,
+    MessageSerializer,
+)
 
 
 def start_bot_client() -> TelegramClient:
@@ -319,3 +324,51 @@ async def export_messages():
         DATA: {MESSAGE: FILE_DOWNLOADED, IS_SUCCESS: True},
         STATUS: status.HTTP_200_OK,
     }
+
+
+@exception
+async def get_individual_details(individual_id):
+    """
+    Return the individual details
+    """
+    try:
+        individual_details = Individual.objects.get(id=individual_id)
+    except Individual.DoesNotExist:
+        return {
+            DATA: {MESSAGE: RECORD_NF, IS_SUCCESS: False},
+            STATUS: status.HTTP_404_NOT_FOUND,
+        }
+
+    serializer = IndividualDetailSerializer(individual_details)
+    return {
+        DATA: {"individual_details": serializer.data, IS_SUCCESS: True},
+        STATUS: status.HTTP_200_OK,
+    }
+
+
+@exception
+async def update_individual_details(individual_id, data):
+    """
+    Return the updated individual details
+    """
+    try:
+        individual_details = Individual.objects.get(id=individual_id)
+    except Individual.DoesNotExist:
+        return {
+            DATA: {MESSAGE: RECORD_NF, IS_SUCCESS: False},
+            STATUS: status.HTTP_404_NOT_FOUND,
+        }
+
+    serializer = IndividualDetailSerializer(individual_details, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        result = {
+            DATA: {"individual_details": serializer.data, IS_SUCCESS: True},
+            STATUS: status.HTTP_200_OK,
+        }
+    else:
+        result = {
+            DATA: {MESSAGE: serializer.errors, IS_SUCCESS: False},
+            STATUS: status.HTTP_400_BAD_REQUEST,
+        }
+    return result
