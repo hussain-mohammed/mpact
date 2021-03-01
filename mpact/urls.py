@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     Dialog,
+    ExportMessages,
     FlagMessage,
     FlagMessageDelete,
     GetMessages,
@@ -16,4 +17,5 @@ urlpatterns = [
     path("flaggedmessages", FlagMessage.as_view()),
     path("flaggedmessages/<int:id>", FlagMessageDelete.as_view()),
     path("schedule_messages", ScheduleMessages.as_view()),
+    path("export_messages", ExportMessages.as_view()),
 ]
