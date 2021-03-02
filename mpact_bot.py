@@ -28,7 +28,7 @@ from telegram_bot.constants import (
 )
 from telegram_bot.logger import logger
 from telegram_bot.messages import WELCOME
-from telegram_bot.utils import get_or_none
+from telegram_bot.utils import get_or_none, increment_messages_count
 
 bot_client = TelegramClient("bot", TELEGRAM_API_ID, TELEGRAM_API_HASH).start(
     bot_token=BOT_TOKEN
@@ -46,6 +46,7 @@ async def chat_handler(event):
                 "id": event.action_message.peer_id.chat_id,
                 "title": event.new_title,
                 "created_at": event.action_message.date,
+                "participant_count": len(event.users),
             }
             serializer = ChatSerializer(data=data)
             serializer.is_valid(raise_exception=True)
@@ -74,8 +75,24 @@ async def chat_handler(event):
                 chat.title = event.new_title
                 chat.save()
 
+        elif event.user_added or event.user_joined:
+            increment_decrement_participant_count(event, "+")
+
+        elif event.user_kicked or event.user_left:
+            increment_decrement_participant_count(event, "-")
+
     except Exception as exception:
         logger.exception(exception)
+
+
+def increment_decrement_participant_count(event, operator):
+    chat = get_or_none(Chat, id=abs(event.chat_id))
+    if chat:
+        if operator == "+":
+            chat.participant_count += len(event.users)
+        elif operator == "-":
+            chat.participant_count -= len(event.users)
+        chat.save()
 
 
 @bot_client.on(events.NewMessage(incoming=True))
@@ -159,6 +176,7 @@ async def save_send_message(msg_data, channel_layer):
     serializer = MessageSerializer(data=msg_data)
     if serializer.is_valid():
         serializer.save()
+        increment_messages_count(serializer)
         await channel_layer.group_send(
             WEBSOCKET_ROOM_NAME,
             {"type": "chat_message", MESSAGE: serializer.data},

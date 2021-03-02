@@ -34,7 +34,7 @@ from telegram_bot.constants import (
     WEBSOCKET_ROOM_NAME,
 )
 from telegram_bot.logger import logger
-from telegram_bot.utils import exception
+from telegram_bot.utils import exception, increment_messages_count
 from telethon import TelegramClient
 from telethon.errors import MessageIdInvalidError
 from telethon.tl.types import InputPeerUser, PeerChat, PeerUser
@@ -68,7 +68,7 @@ async def send_msg(data):
         data[SENDER_NAME] = current_bot.first_name
 
         if data[FROM_GROUP]:
-            receiver = await bot.get_entity(int(data[ROOM_ID]))
+            receiver = await bot.get_entity(PeerChat(int(data[ROOM_ID])))
         else:
             access_hash = Individual.objects.get(id=data[ROOM_ID]).access_hash
             receiver = InputPeerUser(int(data[ROOM_ID]), int(access_hash))
@@ -77,6 +77,7 @@ async def send_msg(data):
         serializer = MessageSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
+            increment_messages_count(serializer)
 
             channel_layer = get_channel_layer()
             await channel_layer.group_send(
