@@ -26,6 +26,8 @@ class Chat(models.Model):
     created_at = models.DateTimeField()
     start_date = models.DateField(default=timezone.now)
     start_time = models.TimeField(default=timezone.now)
+    messages_count = models.IntegerField(default=0)
+    participant_count = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.id} - {self.title}"
@@ -57,11 +59,12 @@ class Individual(models.Model):
     last_name = models.TextField(null=True)
     access_hash = models.TextField()
     study_id = models.TextField(null=True)
-    age = models.TextField(null=True)
+    age = models.IntegerField(null=True)
     gender = models.TextField(null=True)
     address = models.TextField(null=True)
     notes = models.TextField(null=True)
     bots = models.ManyToManyField(Bot, through="BotIndividual")
+    messages_count = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.id} - {self.first_name}"
