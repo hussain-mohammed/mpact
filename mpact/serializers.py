@@ -14,7 +14,7 @@ from .models import (
 class IndividualSerializer(serializers.ModelSerializer):
     class Meta:
         model = Individual
-        fields = ["id", "username", "first_name", "last_name"]
+        fields = ["id", "username", "first_name", "last_name", "messages_count"]
 
 
 class BotIndividualSerializer(serializers.ModelSerializer):
@@ -36,7 +36,7 @@ class BotSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
-        fields = ["id", "title"]
+        fields = ["id", "title", "messages_count", "participant_count"]
 
 
 class ChatBotSerializer(serializers.ModelSerializer):

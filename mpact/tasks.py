@@ -12,6 +12,7 @@ from telegram_bot.constants import (
     TELEGRAM_MSG_ID,
     WEBSOCKET_ROOM_NAME,
 )
+from telegram_bot.utils import increment_messages_count
 from telethon.tl.types import InputPeerChat, InputPeerUser
 
 from .models import Chat, Individual
@@ -57,6 +58,7 @@ async def send_msg(receiver_id, message):
         serializer = MessageSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
+            increment_messages_count(serializer)
 
             channel_layer = get_channel_layer()
             await channel_layer.group_send(
